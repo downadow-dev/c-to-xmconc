@@ -1,0 +1,390 @@
+#!/usr/bin/python3
+
+from pycparser.c_ast import *
+
+
+current_function = ''   # мы находимся в теле этой функции
+                        # (пока лишь в глобальном пространстве имён)
+
+variables = []          # переменные
+functions = []          # функции
+
+current_if = 0
+current_for = 0
+current_while = 0
+current_switchl = 0
+
+def reset():
+    global variables
+    variables = []
+    global functions
+    functions = []
+    global current_function
+    current_function = ''
+    global current_string
+    current_string = 0
+    global current_if
+    current_if = 0
+    global current_for
+    current_for = 0
+    global current_while
+    current_while = 0
+    global current_switchl
+    current_switchl = 0
+
+# получить переменную/массив
+def get_var(name):
+    if current_function == '' or not (current_function + '.' + name) in variables:
+        return '{' + name + '}'
+    else:
+        return '{' + current_function + '.' + name + '}'
+
+# создаёт переменную/массив
+def create_var(name, array_len=0):
+    global variables
+    
+    if current_function != '':
+        name = current_function + '.' + name
+    
+    if not name in variables:
+        variables += [name]
+    return '/alloc ' + name + ('[' + str(array_len) + ']' if array_len > 0 else '') + '\n'
+
+# преобразовать '\'-последовательности в строке
+def preprocess_string(s):
+    return s[1:-1].replace('\\\\', '%/\\\\/%')  \
+        .replace('\\"', '"')                    \
+        .replace('\\n', '\n')                   \
+        .replace('\\b', '\b')                   \
+        .replace('\\r', '\r')                   \
+        .replace('\\033', '\033')               \
+        .replace('\\0', '\0')                   \
+        .replace('%/\\\\/%', '\\')
+
+# код в начале программы
+def get_init_code():
+    return '''
+/alloc ___ret[64]
+/alloc ___retptr
+0 {___retptr} =
+/define function :({___ret} {___retptr}! +) = ({___retptr}! ++) {___retptr} =
+/define return :({___retptr}! --) {___retptr} = (({___ret} {___retptr}! +) .) goto
+'''
+
+current_string = -1
+# компиляция числа, переменной и т. д.
+def compile_obj(obj):
+    global current_string
+    global current_function
+    global variables
+    global functions
+    global current_if
+    global current_while
+    global current_for
+    global current_switchl
+    
+    # новая функция
+    if type(obj) == FuncDef:
+        code = ''
+        # создавать функции получается только в глобальном пространстве имён ('')
+        if current_function != '':
+            raise Exception('create function: current_function != \'\'')
+        #########################################################################
+        elif obj.decl.name == 'main':
+            code += 'main:\n'
+            current_function = 'main'
+        elif not obj.decl.name in functions:
+            if len(functions) == 0:
+                code += '~main goto\n'
+            
+            functions += [obj.decl.name]
+            current_function = obj.decl.name
+            
+            code += obj.decl.name + ': {function}\n'
+            
+            try:
+                for param in obj.decl.type.args.params:
+                    code += create_var(param.name)
+                    code += get_var(param.name) + ' =\n'
+            except Exception:
+                print('', file=sys.stderr)
+            code += ';\n'
+            
+            if obj.decl.type.type.type.names[0].startswith('__thr'):
+                code += '; ~' + obj.decl.name + '.___start create_thrd1 0 {return} thrd_1 ' + obj.decl.name + '.___start:\n'
+            
+        else:
+            raise Exception('create function: function is exists')
+        
+        for item in obj.body.block_items:
+            code += compile_obj(item) + '\n'
+        
+        if obj.decl.type.type.type.names[0].startswith('__thr'):
+            code += '\nhalt thrd_0\n'
+        else:
+            code += '\n; ' + compile_obj(Return(Constant('int', '0')))
+        
+        current_function = ''
+        
+        return code
+    # присваивание
+    elif type(obj) == Assignment and obj.op == '=':
+        return compile_obj(obj.rvalue) + ' ' + get_var(obj.lvalue.name) + ' = ' + get_var(obj.lvalue.name) + '!'
+    elif type(obj) == Assignment and obj.op[0] in '+-/*^%|&' and obj.op.endswith('='):
+        return '(' + compile_obj(obj.rvalue) + ' ' + get_var(obj.lvalue.name) + '! ' + obj.op[0].replace('%', 'mod').replace('&', 'and') + ') ' + get_var(obj.lvalue.name) + ' = ' + get_var(obj.lvalue.name) + '!'
+    # сложение, вычитание и др.
+    elif type(obj) == BinaryOp and obj.op in '-+/*^|':
+        return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' ' + obj.op
+    elif type(obj) == BinaryOp and obj.op == '<<':
+        return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' lsh'
+    elif type(obj) == BinaryOp and obj.op == '>>':
+        return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' rsh'
+    elif type(obj) == BinaryOp and obj.op == '&':
+        return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' and'
+    # if
+    elif type(obj) == If:
+        code = ''
+        saved = current_if
+        current_if += 1
+        code += compile_obj(obj.cond.left) + ' ' + compile_obj(obj.cond.right) + ' '
+        if obj.cond.op == '==':
+            code += '=?'
+        elif obj.cond.op == '!=':
+            code += '!?'
+        elif obj.cond.op == '>':
+            code += 'gt?'
+        elif obj.cond.op == '>=':
+            code += '-- gt?'
+        elif obj.cond.op == '<':
+            code += 'lt?'
+        elif obj.cond.op == '<=':
+            code += '++ lt?'
+        else:
+            raise Exception('sorry, but `' + obj.cond.op + '` operation is not supported')
+        
+        code += ' ~___else' + str(saved) + ' else ;\n'
+        
+        if type(obj.iftrue) == Compound:
+            for item in obj.iftrue.block_items:
+                code += '\t' + compile_obj(item) + '\n'
+        else:
+            code += '\t' + compile_obj(obj.iftrue) + '\n'
+        
+        code += '~___endif' + str(saved) + ' goto ___else' + str(saved) + ': ;\n'
+        
+        if obj.iffalse != None and type(obj.iffalse) == Compound:
+            for item in obj.iftrue.block_items:
+                code += compile_obj(item) + '\n'
+        elif obj.iffalse != None:
+            code += compile_obj(obj.iftrue) + '\n'
+        
+        code += '___endif' + str(saved) + ':\n'
+        
+        return code
+    # строка
+    elif type(obj) == Constant and obj.type == 'string':
+        current_string += 1
+        return '\n"' + preprocess_string(obj.value) + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
+    # return
+    elif type(obj) == Return:
+        return compile_obj(obj.expr) + ' ' + ('{return}' if current_function != 'main' else 'exit')
+    # создание переменной/массива
+    elif type(obj) == DeclList:
+        code = ''
+        for item in obj.decls:
+            code += create_var(item.name)
+            if item.init != None:
+                code += compile_obj(Assignment('=', ID(item.name), item.init)) + '\n'
+        return code
+    elif type(obj) == Decl and type(obj.type) == ArrayDecl:
+        return create_var(obj.name, int(obj.type.dim.value))
+    elif type(obj) == Decl:
+        code = ''
+        code += create_var(obj.name)
+        if obj.init != None:
+            code += compile_obj(Assignment('=', ID(obj.name), obj.init)) + '\n'
+        return code
+    # число
+    elif type(obj) == Constant and obj.type == 'int':
+        return obj.value
+    # символ
+    elif type(obj) == Constant and obj.type == 'char':
+        return str(ord(preprocess_string(obj.value)))
+    # переменная
+    elif type(obj) == ID:
+        return get_var(obj.name) + '!'
+    # printf
+    elif type(obj) == FuncCall and obj.name.name == 'printf':
+        s_format = preprocess_string(obj.args.exprs[0].value)
+        etc = []
+        etc += obj.args.exprs[1:]
+        ptr = 0
+        
+        code = ''
+        
+        i = 0
+        while i < len(s_format):
+            if s_format[i] == '%' and s_format[i + 1] == '%':
+                code += '\'%\' putc '
+                i += 1
+            elif s_format[i] == '%' and s_format[i + 1] == 'c':
+                code += compile_obj(etc[ptr]) + ' putc '
+                ptr += 1
+                i += 1
+            elif s_format[i] == '%' and s_format[i + 1] == 's':
+                code += compile_obj(etc[ptr]) + ' puts '
+                ptr += 1
+                i += 1
+            elif s_format[i] == '%' and s_format[i + 1] == 'd':
+                code += compile_obj(etc[ptr]) + ' putn '
+                ptr += 1
+                i += 1
+            elif s_format[i] == '\n':
+                code += 'newline '
+            elif s_format[i] == '\b':
+                code += 'backspace '
+            else:
+                code += str(ord(s_format[i])) + ' putc '
+            
+            i += 1
+        return code
+    # вызов функции
+    elif type(obj) == FuncCall:
+        code = ''
+        exprs = []
+        if obj.args != None:
+            exprs += obj.args.exprs
+        exprs.reverse()
+        for o in exprs:
+            code += compile_obj(o) + ' '
+        code += ('@' if obj.name.name in functions else '') + obj.name.name
+        return code
+    # инкремент и декремент
+    elif type(obj) == UnaryOp and obj.op == '++p':
+        return '(' + get_var(obj.expr.name) + '! ++) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + '!'
+    elif type(obj) == UnaryOp and obj.op == '--p':
+        return '(' + get_var(obj.expr.name) + '! --) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + '!'
+    elif type(obj) == UnaryOp and obj.op == 'p++':
+        return get_var(obj.expr.name) + '! (' + get_var(obj.expr.name) + '! ++) ' + get_var(obj.expr.name) + ' ='
+    elif type(obj) == UnaryOp and obj.op == 'p--':
+        return get_var(obj.expr.name) + '! (' + get_var(obj.expr.name) + '! --) ' + get_var(obj.expr.name) + ' ='
+    # получение адреса переменной/массива
+    elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID:
+        return get_var(obj.expr.name)
+    # while
+    elif type(obj) == While:
+        code = ''
+        saved = current_while
+        current_while += 1
+        code += '___while' + str(saved) + ': ' + compile_obj(obj.cond.left) + ' ' + compile_obj(obj.cond.right) + ' '
+        if obj.cond.op == '==':
+            code += '=?'
+        elif obj.cond.op == '!=':
+            code += '!?'
+        elif obj.cond.op == '>':
+            code += 'gt?'
+        elif obj.cond.op == '>=':
+            code += '-- gt?'
+        elif obj.cond.op == '<':
+            code += 'lt?'
+        elif obj.cond.op == '<=':
+            code += '++ lt?'
+        else:
+            raise Exception('sorry, but `' + obj.cond.op + '` operation is not supported')
+        
+        code += ' ~___endwhile' + str(saved) + ' else ;\n'
+        
+        if type(obj.stmt) == Compound:
+            for item in obj.stmt.block_items:
+                if type(item) == Continue:
+                    code += '\t' + '~___while' + str(saved) + ' goto\n'
+                elif type(item) == Break:
+                    code += '\t' + '~___endwhile' + str(saved) + ' goto\n'
+                else:
+                    code += '\t' + compile_obj(item) + '\n'
+        else:
+            code += '\t' + compile_obj(obj.stmt) + '\n'
+        
+        code += '~___while' + str(saved) + ' goto ___endwhile' + str(saved) + ':'
+        
+        return code
+    # for
+    elif type(obj) == For:
+        code = ''
+        saved = current_for
+        current_for += 1
+        code += compile_obj(obj.init) + ' '
+        code += '___for' + str(saved) + ': ' + compile_obj(obj.cond.left) + ' ' + compile_obj(obj.cond.right) + ' '
+        if obj.cond.op == '==':
+            code += '=?'
+        elif obj.cond.op == '!=':
+            code += '!?'
+        elif obj.cond.op == '>':
+            code += 'gt?'
+        elif obj.cond.op == '>=':
+            code += '-- gt?'
+        elif obj.cond.op == '<':
+            code += 'lt?'
+        elif obj.cond.op == '<=':
+            code += '++ lt?'
+        else:
+            raise Exception('sorry, but `' + obj.cond.op + '` operation is not supported')
+        
+        code += ' ~___endfor' + str(saved) + ' else ;\n'
+        
+        if type(obj.stmt) == Compound:
+            for item in obj.stmt.block_items:
+                if type(item) == Continue:
+                    code += '\t' + compile_obj(obj.next) + ' ~___for' + str(saved) + ' goto\n'
+                elif type(item) == Break:
+                    code += '\t' + '~___endfor' + str(saved) + ' goto\n'
+                else:
+                    code += '\t' + compile_obj(item) + '\n'
+        else:
+            code += '\t' + compile_obj(obj.stmt) + '\n'
+        
+        code += compile_obj(obj.next) + ' ~___for' + str(saved) + ' goto ___endfor' + str(saved) + ':'
+        
+        return code
+    # switch
+    elif type(obj) == Switch:
+        code = ''
+        
+        saved = current_switchl
+        current_switchl += 1
+        
+        for item in obj.stmt.block_items:
+            if type(item) != Default:
+                code += get_var(obj.cond.name) + '! ' + compile_obj(item.expr) + ' =?'
+                code += ' ~___switchl' + str(current_switchl) + ' else ;\n'
+            
+            for o in item.stmts:
+                code += '\t' + compile_obj(o) + '\n'
+            
+            code += '~___endcase' + str(saved) + ' goto ___switchl' + str(current_switchl) + ': ;\n'
+            
+            current_switchl += 1
+        code += '___switchl' + str(current_switchl - 1) + ':\n'
+        code += '___endcase' + str(saved) + ':\n'
+        
+        return code
+    ####################
+    else:
+        return '# (unknown) #\n'
+
+################################################################################
+
+if __name__ == '__main__':
+    import sys
+    from pycparser import parse_file
+    
+    if len(sys.argv) == 1:
+        print('usage: ./c2xcc.py FILE ["CPP_ARGS"] [> OUT_FILE]')
+        sys.exit(1)
+    
+    ast = parse_file(sys.argv[1], use_cpp=True, cpp_args=('' if len(sys.argv) < 3 else sys.argv[2]))
+    
+    print(get_init_code())
+    for item in ast:
+        print(compile_obj(item))
+
