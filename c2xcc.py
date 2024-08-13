@@ -129,9 +129,9 @@ def compile_obj(obj):
         return code
     # присваивание
     elif type(obj) == Assignment and obj.op == '=':
-        return compile_obj(obj.rvalue) + ' ' + get_var(obj.lvalue.name) + ' = ' + get_var(obj.lvalue.name) + '!'
+        return compile_obj(obj.rvalue) + ' ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .'
     elif type(obj) == Assignment and obj.op[0] in '+-/*^%|&' and obj.op.endswith('='):
-        return '(' + compile_obj(obj.rvalue) + ' ' + get_var(obj.lvalue.name) + '! ' + obj.op[0].replace('%', 'mod').replace('&', 'and') + ') ' + get_var(obj.lvalue.name) + ' = ' + get_var(obj.lvalue.name) + '!'
+        return '(' + compile_obj(obj.rvalue) + ' ' + compile_obj(obj.lvalue).replace('!', '') + '! ' + obj.op[0].replace('%', 'mod').replace('&', 'and') + ') ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .'
     # сложение, вычитание и др.
     elif type(obj) == BinaryOp and obj.op in '-+/*^|':
         return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' ' + obj.op
@@ -210,6 +210,12 @@ def compile_obj(obj):
     # символ
     elif type(obj) == Constant and obj.type == 'char':
         return str(ord(preprocess_string(obj.value)))
+    # элемент массива
+    elif type(obj) == ArrayRef:
+        return get_var(obj.name.name) + ' ' + compile_obj(obj.subscript) + ' + .'
+    # sizeof(массив)
+    elif type(obj) == UnaryOp and obj.op == 'sizeof':
+        return get_var(obj.expr.name)[:-1] + '.length}'
     # переменная
     elif type(obj) == ID:
         return get_var(obj.name) + '!'
