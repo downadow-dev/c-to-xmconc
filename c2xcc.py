@@ -71,6 +71,26 @@ def get_init_code():
 /define return :({___retptr}! --) {___retptr} = (({___ret} {___retptr}! +) .) goto
 '''
 
+# "2 == 4" => "2 4 =?" и т. д.
+def compile_cond(binary_op):
+    if binary_op.op == '==':
+        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' =?'
+    elif binary_op.op == '!=':
+        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' !?'
+    elif binary_op.op == '<':
+        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' lt?'
+    elif binary_op.op == '>':
+        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' gt?'
+    elif binary_op.op == '>=':
+        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' -- gt?'
+    elif binary_op.op == '<=':
+        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' ++ lt?'
+    
+    elif binary_op.op == '&&':
+        return compile_cond(binary_op.left) + ' ' + compile_cond(binary_op.right) + ' ?'
+    elif binary_op.op == '||':
+        return compile_cond(binary_op.left) + ' ' + compile_cond(binary_op.right) + ' |?'
+
 current_string = -1
 # компиляция числа, переменной и т. д.
 def compile_obj(obj):
@@ -146,21 +166,7 @@ def compile_obj(obj):
         code = ''
         saved = current_if
         current_if += 1
-        code += compile_obj(obj.cond.left) + ' ' + compile_obj(obj.cond.right) + ' '
-        if obj.cond.op == '==':
-            code += '=?'
-        elif obj.cond.op == '!=':
-            code += '!?'
-        elif obj.cond.op == '>':
-            code += 'gt?'
-        elif obj.cond.op == '>=':
-            code += '-- gt?'
-        elif obj.cond.op == '<':
-            code += 'lt?'
-        elif obj.cond.op == '<=':
-            code += '++ lt?'
-        else:
-            raise Exception('sorry, but `' + obj.cond.op + '` operation is not supported')
+        code += compile_cond(obj.cond)
         
         code += ' ~___else' + str(saved) + ' else ;\n'
         
@@ -282,21 +288,7 @@ def compile_obj(obj):
         code = ''
         saved = current_while
         current_while += 1
-        code += '___while' + str(saved) + ': ' + compile_obj(obj.cond.left) + ' ' + compile_obj(obj.cond.right) + ' '
-        if obj.cond.op == '==':
-            code += '=?'
-        elif obj.cond.op == '!=':
-            code += '!?'
-        elif obj.cond.op == '>':
-            code += 'gt?'
-        elif obj.cond.op == '>=':
-            code += '-- gt?'
-        elif obj.cond.op == '<':
-            code += 'lt?'
-        elif obj.cond.op == '<=':
-            code += '++ lt?'
-        else:
-            raise Exception('sorry, but `' + obj.cond.op + '` operation is not supported')
+        code += '___while' + str(saved) + ': ' + compile_cond(obj.cond)
         
         code += ' ~___endwhile' + str(saved) + ' else ;\n'
         
@@ -320,21 +312,7 @@ def compile_obj(obj):
         saved = current_for
         current_for += 1
         code += compile_obj(obj.init) + ' '
-        code += '___for' + str(saved) + ': ' + compile_obj(obj.cond.left) + ' ' + compile_obj(obj.cond.right) + ' '
-        if obj.cond.op == '==':
-            code += '=?'
-        elif obj.cond.op == '!=':
-            code += '!?'
-        elif obj.cond.op == '>':
-            code += 'gt?'
-        elif obj.cond.op == '>=':
-            code += '-- gt?'
-        elif obj.cond.op == '<':
-            code += 'lt?'
-        elif obj.cond.op == '<=':
-            code += '++ lt?'
-        else:
-            raise Exception('sorry, but `' + obj.cond.op + '` operation is not supported')
+        code += '___for' + str(saved) + ': ' + compile_cond(obj.cond)
         
         code += ' ~___endfor' + str(saved) + ' else ;\n'
         
