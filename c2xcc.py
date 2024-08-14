@@ -222,6 +222,15 @@ def compile_obj(obj):
     # sizeof(массив)
     elif type(obj) == UnaryOp and obj.op == 'sizeof':
         return get_var(obj.expr.name)[:-1] + '.length}'
+    # sizeof
+    elif type(obj) == UnaryOp and obj.op == 'sizeof':
+        return '1'
+    # -выражение
+    elif type(obj) == UnaryOp and obj.op == '-':
+        return compile_obj(obj.expr) + ' neg'
+    # ~выражение
+    elif type(obj) == UnaryOp and obj.op == '~':
+        return compile_obj(obj.expr) + ' neg --'
     # переменная
     elif type(obj) == ID:
         return get_var(obj.name) + '!'
@@ -304,6 +313,27 @@ def compile_obj(obj):
             code += '\t' + compile_obj(obj.stmt) + '\n'
         
         code += '~___while' + str(saved) + ' goto ___endwhile' + str(saved) + ':'
+        
+        return code
+    # do-while
+    elif type(obj) == DoWhile:
+        code = ''
+        saved = current_while
+        current_while += 1
+        code += '___dowhile' + str(saved) + ':\n'
+        
+        if type(obj.stmt) == Compound:
+            for item in obj.stmt.block_items:
+                if type(item) == Continue:
+                    code += '\t' + '~___dowhile' + str(saved) + ' goto\n'
+                elif type(item) == Break:
+                    code += '\t' + '~___enddowhile' + str(saved) + ' goto\n'
+                else:
+                    code += '\t' + compile_obj(item) + '\n'
+        else:
+            code += '\t' + compile_obj(obj.stmt) + '\n'
+        
+        code += compile_cond(obj.cond) + ' ~___dowhile' + str(saved) + ' then ___enddowhile' + str(saved) + ':\n'
         
         return code
     # for
