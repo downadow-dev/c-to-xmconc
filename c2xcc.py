@@ -227,6 +227,8 @@ def compile_obj(obj):
     # число
     elif type(obj) == Constant and obj.type == 'int' and not obj.value.startswith('0'):
         return str(int(obj.value, base=0))
+    elif type(obj) == Constant and obj.type == 'int' and obj.value.startswith('0x'):
+        return str(int(obj.value[2:], base=16))
     elif type(obj) == Constant and obj.type == 'int':
         return str(int(obj.value, base=8))
     # символ
