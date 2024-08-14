@@ -234,7 +234,7 @@ def compile_obj(obj):
     elif type(obj) == ArrayRef:
         return get_var(obj.name.name) + ' ' + compile_obj(obj.subscript) + ' + .'
     # sizeof(массив)
-    elif type(obj) == UnaryOp and obj.op == 'sizeof':
+    elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID:
         return get_var(obj.expr.name)[:-1] + '.length}'
     # sizeof
     elif type(obj) == UnaryOp and obj.op == 'sizeof':
