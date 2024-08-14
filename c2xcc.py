@@ -127,11 +127,12 @@ def compile_obj(obj):
         elif obj.decl.name == 'main':
             code += 'main:\n'
             current_function = 'main'
-        elif not obj.decl.name in functions:
+        else:
             if len(functions) == 0:
                 code += '~main goto\n'
             
-            functions += [obj.decl.name]
+            if not obj.decl.name in functions:
+                functions += [obj.decl.name]
             current_function = obj.decl.name
             
             code += obj.decl.name + ': {function}\n'
@@ -147,8 +148,6 @@ def compile_obj(obj):
             if obj.decl.type.type.type.names[0].startswith('__thr'):
                 code += '; ~' + obj.decl.name + '.___start create_thrd1 0 {return} thrd_1 ' + obj.decl.name + '.___start:\n'
             
-        else:
-            raise Exception('create function: function is exists')
         
         if obj.body.block_items != None:
             for item in obj.body.block_items:
