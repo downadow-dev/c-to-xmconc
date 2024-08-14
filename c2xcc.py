@@ -321,14 +321,23 @@ def compile_obj(obj):
         code += ('@' if obj.name.name in functions else '') + obj.name.name
         return code
     # инкремент и декремент
-    elif type(obj) == UnaryOp and obj.op == '++p':
+    elif type(obj) == UnaryOp and obj.op == '++' and type(obj.expr) == ID:
         return '(' + get_var(obj.expr.name) + '! ++) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + '!'
-    elif type(obj) == UnaryOp and obj.op == '--p':
+    elif type(obj) == UnaryOp and obj.op == '--' and type(obj.expr) == ID:
         return '(' + get_var(obj.expr.name) + '! --) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + '!'
-    elif type(obj) == UnaryOp and obj.op == 'p++':
+    elif type(obj) == UnaryOp and obj.op == 'p++' and type(obj.expr) == ID:
         return get_var(obj.expr.name) + '! (' + get_var(obj.expr.name) + '! ++) ' + get_var(obj.expr.name) + ' ='
-    elif type(obj) == UnaryOp and obj.op == 'p--':
+    elif type(obj) == UnaryOp and obj.op == 'p--' and type(obj.expr) == ID:
         return get_var(obj.expr.name) + '! (' + get_var(obj.expr.name) + '! --) ' + get_var(obj.expr.name) + ' ='
+    
+    elif type(obj) == UnaryOp and obj.op == '++' and type(obj.expr) == ArrayRef:
+        return '(' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' = ' + compile_obj(obj.expr)
+    elif type(obj) == UnaryOp and obj.op == '--' and type(obj.expr) == ArrayRef:
+        return '(' + compile_obj(obj.expr) + ' --) ' + compile_obj(obj.expr)[:-2] + ' = ' + compile_obj(obj.expr)
+    elif type(obj) == UnaryOp and obj.op == 'p++' and type(obj.expr) == ArrayRef:
+        return compile_obj(obj.expr) + ' (' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' ='
+    elif type(obj) == UnaryOp and obj.op == 'p--' and type(obj.expr) == ArrayRef:
+        return compile_obj(obj.expr) + ' (' + compile_obj(obj.expr) + ' --) ' + compile_obj(obj.expr)[:-2] + ' ='
     # получение адреса переменной/массива
     elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID:
         return get_var(obj.expr.name)
