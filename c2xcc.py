@@ -72,24 +72,29 @@ def get_init_code():
 '''
 
 # "2 == 4" => "2 4 =?" и т. д.
-def compile_cond(binary_op):
-    if binary_op.op == '==':
-        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' =?'
-    elif binary_op.op == '!=':
-        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' !?'
-    elif binary_op.op == '<':
-        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' lt?'
-    elif binary_op.op == '>':
-        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' gt?'
-    elif binary_op.op == '>=':
-        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' -- gt?'
-    elif binary_op.op == '<=':
-        return compile_obj(binary_op.left) + ' ' + compile_obj(binary_op.right) + ' ++ lt?'
+def compile_cond(op):
+    if type(op) == UnaryOp and op.op == '!':
+        return compile_cond(op.expr) + ' !'
+    elif type(op) != UnaryOp and type(op) != BinaryOp:
+        return compile_obj(op) + ' 1 =?' # 1 = true
     
-    elif binary_op.op == '&&':
-        return compile_cond(binary_op.left) + ' ' + compile_cond(binary_op.right) + ' ?'
-    elif binary_op.op == '||':
-        return compile_cond(binary_op.left) + ' ' + compile_cond(binary_op.right) + ' |?'
+    elif op.op == '==':
+        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' =?'
+    elif op.op == '!=':
+        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' !?'
+    elif op.op == '<':
+        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' lt?'
+    elif op.op == '>':
+        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' gt?'
+    elif op.op == '>=':
+        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' -- gt?'
+    elif op.op == '<=':
+        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' ++ lt?'
+    
+    elif op.op == '&&':
+        return compile_cond(op.left) + ' ' + compile_cond(op.right) + ' ?'
+    elif op.op == '||':
+        return compile_cond(op.left) + ' ' + compile_cond(op.right) + ' |?'
 
 current_string = -1
 # компиляция числа, переменной и т. д.
