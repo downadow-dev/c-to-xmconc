@@ -213,6 +213,17 @@ def compile_obj(obj):
     ######################################################
     elif type(obj) == Cast:
         return compile_obj(obj.expr)
+    # (a == b ? c : d) и др.
+    elif type(obj) == TernaryOp:
+        code = ''
+        
+        code += compile_cond(obj.cond) + ' ~___tElse' + str(current_if) + ' else '
+        code += compile_obj(obj.iftrue) + ' ~___tEndif' + str(current_if) + ' goto ___tElse' + str(current_if) + ': '
+        code += compile_obj(obj.iffalse) + ' ___tEndif' + str(current_if) + ':'
+        
+        current_if += 1
+        
+        return code
     # число
     elif type(obj) == Constant and obj.type == 'int':
         return obj.value
@@ -386,6 +397,8 @@ def compile_obj(obj):
         
         return code
     ####################
+    elif type(obj) == EmptyStatement:
+        return ''
     else:
         return '# (unknown) #\n'
 
