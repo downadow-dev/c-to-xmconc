@@ -1,28 +1,21 @@
-#define meminit(a, s)   for(int i = 0; i < s; i++) a[i] = '\0';
+#define meminit(buf, size)   for(int i = 0; i < size; i++) buf[i] = '\0';
 
-int get_num() {
-    char array[8];
-    meminit(array, sizeof(array));
-    
-    int c;
-    for(int i = 0; (c = getc()) != '\n' && i < (sizeof(array) - 1); i++) {
-        array[i] = c - (int)'0';
-        putc(c);
-    }
-    printf("\n");
-    
-    char new_array[8];
-    meminit(new_array, sizeof(new_array));
+int atoi(char *s) {
+    char s2[8];
+    meminit(s2, sizeof(s2));
     
     int j = 0;
-    for(int i = (sizeof(array) - strlen(&array) - 1); i < (sizeof(new_array) - 1); i++)
-        new_array[i] = array[j++];
+    for(int i = (sizeof(s2) - strlen(s) - 1); i < (sizeof(s2) - 1); i++)
+        s2[i] = s[j++] - (int)'0';
     
-    return cat(new_array[1], new_array[2], new_array[3], new_array[4],
-        new_array[5], new_array[6]) + (1000000 * new_array[0]);
+    return cat(s2[1], s2[2], s2[3], s2[4],
+        s2[5], s2[6]) + (1000000 * s2[0]);
 }
 
 int main() {
-    printf("%d\n", get_num());
+    char buf[128];
+    getargs(buf);
+    
+    printf("%d\n", atoi(buf));
 }
 

@@ -203,7 +203,9 @@ def compile_obj(obj):
                 code += compile_obj(Assignment('=', ID(item.name), item.init)) + '\n'
         return code
     elif type(obj) == Decl and type(obj.type) == ArrayDecl:
-        return create_var(obj.name, int(obj.type.dim.value))
+        return create_var(obj.name + '__ARRAY__', int(obj.type.dim.value)) \
+            + create_var(obj.name) \
+            + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' ='
     elif type(obj) == Decl:
         code = ''
         code += create_var(obj.name)
@@ -236,10 +238,10 @@ def compile_obj(obj):
         return str(ord(preprocess_string(obj.value)))
     # элемент массива
     elif type(obj) == ArrayRef:
-        return get_var(obj.name.name) + ' ' + compile_obj(obj.subscript) + ' + .'
+        return get_var(obj.name.name) + '! ' + compile_obj(obj.subscript) + ' + .'
     # sizeof(массив)
     elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID:
-        return get_var(obj.expr.name)[:-1] + '.length}'
+        return get_var(obj.expr.name)[:-1] + '__ARRAY__.length}'
     # sizeof
     elif type(obj) == UnaryOp and obj.op == 'sizeof':
         return '1'
