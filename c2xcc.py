@@ -145,7 +145,7 @@ def compile_obj(obj):
                 print('', file=sys.stderr)
             code += ';\n'
             
-            if obj.decl.type.type.type.names[0].startswith('__thr'):
+            if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
                 code += '; ~' + obj.decl.name + '.___start create_thrd1 0 {return} thrd_1 ' + obj.decl.name + '.___start:\n'
             
         
@@ -153,7 +153,7 @@ def compile_obj(obj):
             for item in obj.body.block_items:
                 code += compile_obj(item) + '\n'
         
-        if obj.decl.type.type.type.names[0].startswith('__thr'):
+        if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
             code += '\nhalt thrd_0\n'
         else:
             code += '\n; ' + compile_obj(Return(Constant('int', '0')))
