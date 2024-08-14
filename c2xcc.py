@@ -136,8 +136,9 @@ def compile_obj(obj):
         else:
             raise Exception('create function: function is exists')
         
-        for item in obj.body.block_items:
-            code += compile_obj(item) + '\n'
+        if obj.body.block_items != None:
+            for item in obj.body.block_items:
+                code += compile_obj(item) + '\n'
         
         if obj.decl.type.type.type.names[0].startswith('__thr'):
             code += '\nhalt thrd_0\n'
@@ -194,6 +195,10 @@ def compile_obj(obj):
     # return
     elif type(obj) == Return:
         return compile_obj(obj.expr) + ' ' + ('{return}' if current_function != 'main' else 'exit')
+    # FuncDecl
+    elif type(obj) == Decl and type(obj.type) == FuncDecl and current_function == '':
+        functions += [obj.name]
+        return ''
     # создание переменной/массива
     elif type(obj) == DeclList:
         code = ''
