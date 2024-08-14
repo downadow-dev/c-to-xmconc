@@ -417,7 +417,7 @@ def compile_obj(obj):
         
         for item in obj.stmt.block_items:
             if type(item) != Default:
-                code += get_var(obj.cond.name) + '! ' + compile_obj(item.expr) + ' =?'
+                code += compile_obj(obj.cond) + ' ' + compile_obj(item.expr) + ' =?'
                 code += ' ~___switchl' + str(current_switchl) + ' else ;\n'
             
             for o in item.stmts:
