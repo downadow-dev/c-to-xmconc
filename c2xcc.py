@@ -210,6 +210,9 @@ def compile_obj(obj):
         if obj.init != None:
             code += compile_obj(Assignment('=', ID(obj.name), obj.init)) + '\n'
         return code
+    ######################################################
+    elif type(obj) == Cast:
+        return compile_obj(obj.expr)
     # число
     elif type(obj) == Constant and obj.type == 'int':
         return obj.value
