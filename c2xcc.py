@@ -57,6 +57,10 @@ def preprocess_string(s):
         .replace('\\n', '\n')                   \
         .replace('\\b', '\b')                   \
         .replace('\\r', '\r')                   \
+        .replace('\\t', '\t')                   \
+        .replace('\\f', '\f')                   \
+        .replace('\\a', '\a')                   \
+        .replace('\\v', '\v')                   \
         .replace('\\033', '\033')               \
         .replace('\\0', '\0')                   \
         .replace('%/\\\\/%', '\\')
