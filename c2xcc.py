@@ -289,7 +289,8 @@ def compile_obj(obj):
         exprs = []
         if obj.args != None:
             exprs += obj.args.exprs
-        exprs.reverse()
+        if obj.name.name in functions:
+            exprs.reverse()
         for o in exprs:
             code += compile_obj(o) + ' '
         code += ('@' if obj.name.name in functions else '') + obj.name.name

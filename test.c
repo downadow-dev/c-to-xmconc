@@ -18,8 +18,8 @@ int get_num() {
     for(int i = (sizeof(array) - strlen(&array) - 1); i < (sizeof(new_array) - 1); i++)
         new_array[i] = array[j++];
     
-    return cat(new_array[6], new_array[5], new_array[4], new_array[3],
-        new_array[2], new_array[1]) + (1000000 * new_array[0]);
+    return cat(new_array[1], new_array[2], new_array[3], new_array[4],
+        new_array[5], new_array[6]) + (1000000 * new_array[0]);
 }
 
 int main() {
