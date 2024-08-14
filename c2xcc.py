@@ -76,7 +76,7 @@ def compile_cond(op):
     if type(op) == UnaryOp and op.op == '!':
         return compile_cond(op.expr) + ' !'
     elif type(op) != UnaryOp and type(op) != BinaryOp:
-        return compile_obj(op) + ' 1 =?' # 1 = true
+        return compile_obj(op) # 1 = true
     
     elif op.op == '==':
         return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' =?'
