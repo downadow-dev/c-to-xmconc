@@ -193,10 +193,10 @@ def compile_obj(obj):
         code += '~___endif' + str(saved) + ' goto ___else' + str(saved) + ': ;\n'
         
         if obj.iffalse != None and type(obj.iffalse) == Compound:
-            for item in obj.iftrue.block_items:
+            for item in obj.iffalse.block_items:
                 code += compile_obj(item) + '\n'
         elif obj.iffalse != None:
-            code += compile_obj(obj.iftrue) + '\n'
+            code += compile_obj(obj.iffalse) + '\n'
         
         code += '___endif' + str(saved) + ':\n'
         
