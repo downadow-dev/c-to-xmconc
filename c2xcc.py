@@ -69,10 +69,10 @@ def preprocess_string(s):
 def get_init_code():
     return '''
 /alloc ___ret[64]
-/alloc ___retptr
-0 {___retptr} =
-/define function :({___ret} {___retptr}! +) = ({___retptr}! ++) {___retptr} =
-/define return :({___retptr}! --) {___retptr} = (({___ret} {___retptr}! +) .) goto
+/alloc __retptr
+0 {__retptr} =
+/define function :({___ret} {__retptr}! +) = ({__retptr}! ++) {__retptr} =
+/define return :({__retptr}! --) {__retptr} = (({___ret} {__retptr}! +) .) goto
 '''
 
 # "2 == 4" => "2 4 =?" и т. д.
@@ -139,14 +139,13 @@ def compile_obj(obj):
             
             try:
                 for param in obj.decl.type.args.params:
-                    code += create_var(param.name)
+                    code += compile_obj(param) + '\n'
                     code += get_var(param.name) + ' =\n'
             except Exception:
                 print('', file=sys.stderr)
-            code += ';\n'
             
             if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
-                code += '; ~' + obj.decl.name + '.___start create_thrd1 0 {return} thrd_1 ' + obj.decl.name + '.___start:\n'
+                code += '~' + obj.decl.name + '.___start create_thrd1 0 {return} thrd_1 ' + obj.decl.name + '.___start:\n'
             
         
         if obj.body.block_items != None:
@@ -156,7 +155,7 @@ def compile_obj(obj):
         if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
             code += '\nhalt thrd_0\n'
         else:
-            code += '\n; ' + compile_obj(Return(Constant('int', '0')))
+            code += '\n' + compile_obj(Return(Constant('int', '0')))
         
         current_function = ''
         
@@ -165,7 +164,7 @@ def compile_obj(obj):
     elif type(obj) == Assignment and obj.op == '=':
         return compile_obj(obj.rvalue) + ' ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .'
     elif type(obj) == Assignment and obj.op[0] in '+-/*^%|&' and obj.op.endswith('='):
-        return '(' + compile_obj(obj.rvalue) + ' ' + compile_obj(obj.lvalue).replace('!', '') + '! ' + obj.op[0].replace('%', 'mod').replace('&', 'and') + ') ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .'
+        return '(' + compile_obj(obj.rvalue) + ' ' + compile_obj(obj.lvalue).replace('!', '') + ' . ' + obj.op[0].replace('%', 'mod').replace('&', 'and') + ') ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .'
     # сложение, вычитание и др.
     elif type(obj) == BinaryOp and obj.op in '-+/*^|':
         return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' ' + obj.op
@@ -182,7 +181,7 @@ def compile_obj(obj):
         current_if += 1
         code += compile_cond(obj.cond)
         
-        code += ' ~___else' + str(saved) + ' else ;\n'
+        code += ' ~___else' + str(saved) + ' else ' + (';' if current_function == 'main' else '') + '\n'
         
         if type(obj.iftrue) == Compound:
             for item in obj.iftrue.block_items:
@@ -190,7 +189,7 @@ def compile_obj(obj):
         else:
             code += '\t' + compile_obj(obj.iftrue) + '\n'
         
-        code += '~___endif' + str(saved) + ' goto ___else' + str(saved) + ': ;\n'
+        code += '~___endif' + str(saved) + ' goto ___else' + str(saved) + ': ' + (';' if current_function == 'main' else '') + '\n'
         
         if obj.iffalse != None and type(obj.iffalse) == Compound:
             for item in obj.iffalse.block_items:
@@ -216,14 +215,22 @@ def compile_obj(obj):
     elif type(obj) == DeclList:
         code = ''
         for item in obj.decls:
-            code += create_var(item.name)
-            if item.init != None:
-                code += compile_obj(Assignment('=', ID(item.name), item.init)) + '\n'
+            code += compile_obj(item) + '\n'
         return code
     elif type(obj) == Decl and type(obj.type) == ArrayDecl:
         return create_var(obj.name + '__ARRAY__', int(obj.type.dim.value)) \
             + create_var(obj.name) \
             + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' ='
+    elif type(obj) == Decl and (current_function != '' and current_function != 'main') and not 'static' in obj.storage:
+        code = ''
+        variables += [current_function + '.' + obj.name]
+        code += '/alloc ' + current_function + '.' + obj.name + '___ARRAY__[64]\n'
+        code += '/define ' + current_function + '.' + obj.name + ' :{' \
+            + current_function + '.' + obj.name + '___ARRAY__} {__retptr}! +' + '\n'
+        if obj.init != None:
+            code += compile_obj(Assignment('=', ID(current_function + '.' + obj.name), obj.init)) + '\n'
+        
+        return code
     elif type(obj) == Decl:
         code = ''
         code += create_var(obj.name)
@@ -256,7 +263,7 @@ def compile_obj(obj):
         return str(ord(preprocess_string(obj.value)))
     # элемент массива
     elif type(obj) == ArrayRef:
-        return get_var(obj.name.name) + '! ' + compile_obj(obj.subscript) + ' + .'
+        return get_var(obj.name.name) + ' . ' + compile_obj(obj.subscript) + ' + .'
     # sizeof(массив)
     elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID:
         return get_var(obj.expr.name)[:-1] + '__ARRAY__.length}'
@@ -271,7 +278,7 @@ def compile_obj(obj):
         return compile_obj(obj.expr) + ' neg --'
     # переменная
     elif type(obj) == ID:
-        return get_var(obj.name) + '!'
+        return get_var(obj.name) + ' .'
     # printf
     elif type(obj) == FuncCall and obj.name.name == 'printf':
         s_format = preprocess_string(obj.args.exprs[0].value)
@@ -321,13 +328,13 @@ def compile_obj(obj):
         return code
     # инкремент и декремент
     elif type(obj) == UnaryOp and obj.op == '++' and type(obj.expr) == ID:
-        return '(' + get_var(obj.expr.name) + '! ++) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + '!'
+        return '(' + get_var(obj.expr.name) + ' . ++) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + ' .'
     elif type(obj) == UnaryOp and obj.op == '--' and type(obj.expr) == ID:
-        return '(' + get_var(obj.expr.name) + '! --) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + '!'
+        return '(' + get_var(obj.expr.name) + ' . --) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + ' .'
     elif type(obj) == UnaryOp and obj.op == 'p++' and type(obj.expr) == ID:
-        return get_var(obj.expr.name) + '! (' + get_var(obj.expr.name) + '! ++) ' + get_var(obj.expr.name) + ' ='
+        return get_var(obj.expr.name) + ' . (' + get_var(obj.expr.name) + ' . ++) ' + get_var(obj.expr.name) + ' ='
     elif type(obj) == UnaryOp and obj.op == 'p--' and type(obj.expr) == ID:
-        return get_var(obj.expr.name) + '! (' + get_var(obj.expr.name) + '! --) ' + get_var(obj.expr.name) + ' ='
+        return get_var(obj.expr.name) + ' . (' + get_var(obj.expr.name) + ' . --) ' + get_var(obj.expr.name) + ' ='
     
     elif type(obj) == UnaryOp and obj.op == '++' and type(obj.expr) == ArrayRef:
         return '(' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' = ' + compile_obj(obj.expr)
@@ -347,7 +354,7 @@ def compile_obj(obj):
         current_while += 1
         code += '___while' + str(saved) + ': ' + compile_cond(obj.cond)
         
-        code += ' ~___endwhile' + str(saved) + ' else ;\n'
+        code += ' ~___endwhile' + str(saved) + ' else ' + (';' if current_function == 'main' else '') + '\n'
         
         if type(obj.stmt) == Compound:
             for item in obj.stmt.block_items:
@@ -392,7 +399,7 @@ def compile_obj(obj):
         code += compile_obj(obj.init) + ' '
         code += '___for' + str(saved) + ': ' + compile_cond(obj.cond)
         
-        code += ' ~___endfor' + str(saved) + ' else ;\n'
+        code += ' ~___endfor' + str(saved) + ' else ' + (';' if current_function == 'main' else '') + '\n'
         
         if type(obj.stmt) == Compound:
             for item in obj.stmt.block_items:
@@ -418,12 +425,12 @@ def compile_obj(obj):
         for item in obj.stmt.block_items:
             if type(item) != Default:
                 code += compile_obj(obj.cond) + ' ' + compile_obj(item.expr) + ' =?'
-                code += ' ~___switchl' + str(current_switchl) + ' else ;\n'
+                code += ' ~___switchl' + str(current_switchl) + ' else ' + (';' if current_function == 'main' else '') + '\n'
             
             for o in item.stmts:
                 code += '\t' + compile_obj(o) + '\n'
             
-            code += '~___endcase' + str(saved) + ' goto ___switchl' + str(current_switchl) + ': ;\n'
+            code += '~___endcase' + str(saved) + ' goto ___switchl' + str(current_switchl) + ': ' + (';' if current_function == 'main' else '') + '\n'
             
             current_switchl += 1
         code += '___switchl' + str(current_switchl - 1) + ':\n'
