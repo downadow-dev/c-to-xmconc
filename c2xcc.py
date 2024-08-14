@@ -103,8 +103,13 @@ def compile_obj(obj):
     global current_for
     global current_switchl
     
+    if type(obj) == ExprList:
+        code = ''
+        for item in obj.exprs:
+            code += compile_obj(item) + '\n'
+        return code
     # новая функция
-    if type(obj) == FuncDef:
+    elif type(obj) == FuncDef:
         code = ''
         # создавать функции получается только в глобальном пространстве имён ('')
         if current_function != '':
