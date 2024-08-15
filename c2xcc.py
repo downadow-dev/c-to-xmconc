@@ -160,6 +160,9 @@ def compile_obj(obj, root=False):
         current_function = ''
         
         return code
+    # вставить адрес функции
+    elif type(obj) == ID and (obj.name == 'main' or obj.name in functions):
+        return '~' + obj.name
     # присваивание
     elif type(obj) == Assignment and obj.op == '=':
         return compile_obj(obj.rvalue) + ' ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (((compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .') if not root else '')
