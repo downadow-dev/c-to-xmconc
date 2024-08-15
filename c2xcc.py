@@ -183,6 +183,8 @@ def compile_obj(obj, root=False):
     # struct
     elif type(obj) == Decl and type(obj.type) == Struct:
         structs[obj.type.name] = obj.type.decls;
+        
+        return ''
     # структура
     elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
         structures[obj.name] = obj.type.type.name
@@ -193,6 +195,16 @@ def compile_obj(obj, root=False):
         if obj.init != None and type(obj.init) == InitList:
             for i in range(len(obj.init.exprs)):
                 code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '} ' + str(i) + ' +) =\n'
+        
+        return code
+    # указатель на структуру
+    elif type(obj) == Decl and type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and type(obj.type.type.type) == Struct:
+        structures[obj.name] = obj.type.type.type.name
+        
+        code = ''
+        code += '/alloc ' + obj.name + '\n'
+        if obj.init != None:
+            code += compile_obj(obj.init) + ' {' + obj.name + '} =\n' 
         
         return code
     # вставить enumerator
@@ -327,6 +339,11 @@ def compile_obj(obj, root=False):
         while structs[structures[obj.name.name]][i].name != obj.field.name:
             i += 1
         return '{' + obj.name.name + '} ' + str(i) + ' + .'
+    elif type(obj) == StructRef and obj.type == '->':
+        i = 0
+        while structs[structures[obj.name.name]][i].name != obj.field.name:
+            i += 1
+        return '{' + obj.name.name + '}! ' + str(i) + ' + .'
     # переменная
     elif type(obj) == ID:
         return get_var(obj.name) + ' .'
@@ -403,6 +420,11 @@ def compile_obj(obj, root=False):
         while structs[structures[obj.expr.name.name]][i].name != obj.expr.field.name:
             i += 1
         return '{' + obj.expr.name.name + '} ' + str(i) + ' +'
+    elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == StructRef and obj.expr.type == '->':
+        i = 0
+        while structs[structures[obj.expr.name.name]][i].name != obj.expr.field.name:
+            i += 1
+        return '{' + obj.expr.name.name + '}! ' + str(i) + ' +'
     elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID:
         return get_var(obj.expr.name)
     # while
