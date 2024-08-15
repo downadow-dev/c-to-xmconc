@@ -456,7 +456,7 @@ if __name__ == '__main__':
         print('usage: ./c2xcc.py FILE ["CPP_ARGS"] [> OUT_FILE]')
         sys.exit(1)
     
-    ast = parse_file(sys.argv[1], use_cpp=True, cpp_args=('' if len(sys.argv) < 3 else sys.argv[2]))
+    ast = parse_file(sys.argv[1], use_cpp=True, cpp_args=('-D__XCC_C__=1 ' + ('' if len(sys.argv) < 3 else sys.argv[2])))
     
     print(get_init_code())
     for item in ast:
