@@ -122,6 +122,8 @@ def compile_obj(obj, root=False):
     global current_for
     global current_switchl
     global enumerators
+    global structs
+    global structures
     
     if type(obj) == ExprList:
         code = ''
