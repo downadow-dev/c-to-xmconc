@@ -429,6 +429,9 @@ def compile_obj(obj, root=False):
         return '{' + obj.expr.name.name + '}! ' + str(i) + ' +'
     elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID:
         return get_var(obj.expr.name)
+    # *expr
+    elif type(obj) == UnaryOp and obj.op == '*':
+        return compile_obj(obj.expr) + ' .'
     # while
     elif type(obj) == While:
         code = ''
