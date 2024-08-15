@@ -166,8 +166,8 @@ def compile_obj(obj, root=False):
     elif type(obj) == Assignment and obj.op[0] in '+-/*^%|&' and obj.op.endswith('='):
         return '(' + compile_obj(obj.rvalue) + ' ' + compile_obj(obj.lvalue).replace('!', '') + ' . ' + obj.op[0].replace('%', 'mod').replace('&', 'and') + ') ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (((compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .') if not root else '')
     # сложение, вычитание и др.
-    elif type(obj) == BinaryOp and obj.op in '-+/*^|':
-        return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' ' + obj.op
+    elif type(obj) == BinaryOp and obj.op in '-+/*^|%':
+        return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' ' + obj.op.replace('%', 'mod')
     elif type(obj) == BinaryOp and obj.op == '<<':
         return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' lsh'
     elif type(obj) == BinaryOp and obj.op == '>>':
