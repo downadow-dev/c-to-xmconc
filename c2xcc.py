@@ -14,6 +14,8 @@ current_for = 0
 current_while = 0
 current_switchl = 0
 
+enumerators = {}
+
 def reset():
     global variables
     variables = []
@@ -31,6 +33,8 @@ def reset():
     current_while = 0
     global current_switchl
     current_switchl = 0
+    global enumerators
+    enumerators = {}
 
 # получить переменную/массив
 def get_var(name):
@@ -111,6 +115,7 @@ def compile_obj(obj, root=False):
     global current_while
     global current_for
     global current_switchl
+    global enumerators
     
     if type(obj) == ExprList:
         code = ''
@@ -160,6 +165,17 @@ def compile_obj(obj, root=False):
         current_function = ''
         
         return code
+    # новый enum
+    elif type(obj) == Decl and type(obj.type) == Enum:
+        i = 0
+        for item in obj.type.values.enumerators:
+            if item.value != None:
+                i = int(item.value.value)
+            enumerators[item.name] = i
+            i += 1
+    # вставить enumerator
+    elif type(obj) == ID and (obj.name in enumerators):
+        return str(enumerators[obj.name])
     # вставить адрес функции
     elif type(obj) == ID and (obj.name == 'main' or obj.name in functions):
         return '~' + obj.name
