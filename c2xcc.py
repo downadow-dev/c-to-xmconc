@@ -523,6 +523,8 @@ def compile_obj(obj, root=False):
         
         return code
     ####################
+    elif type(obj) == BinaryOp:
+        return compile_cond(obj)
     elif type(obj) == EmptyStatement:
         return ''
     else:
