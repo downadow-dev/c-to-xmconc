@@ -102,7 +102,7 @@ def compile_cond(op):
 
 current_string = -1
 # компиляция числа, переменной и т. д.
-def compile_obj(obj):
+def compile_obj(obj, root=False):
     global current_string
     global current_function
     global variables
@@ -150,7 +150,7 @@ def compile_obj(obj):
         
         if obj.body.block_items != None:
             for item in obj.body.block_items:
-                code += compile_obj(item) + '\n'
+                code += compile_obj(item, root=True) + '\n'
         
         if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
             code += '\nhalt thrd_0\n'
@@ -162,9 +162,9 @@ def compile_obj(obj):
         return code
     # присваивание
     elif type(obj) == Assignment and obj.op == '=':
-        return compile_obj(obj.rvalue) + ' ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .'
+        return compile_obj(obj.rvalue) + ' ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (((compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .') if not root else '')
     elif type(obj) == Assignment and obj.op[0] in '+-/*^%|&' and obj.op.endswith('='):
-        return '(' + compile_obj(obj.rvalue) + ' ' + compile_obj(obj.lvalue).replace('!', '') + ' . ' + obj.op[0].replace('%', 'mod').replace('&', 'and') + ') ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .'
+        return '(' + compile_obj(obj.rvalue) + ' ' + compile_obj(obj.lvalue).replace('!', '') + ' . ' + obj.op[0].replace('%', 'mod').replace('&', 'and') + ') ' + (compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' = ' + (((compile_obj(obj.lvalue)[:-2] if type(obj.lvalue) == ArrayRef else get_var(obj.lvalue.name)) + ' .') if not root else '')
     # сложение, вычитание и др.
     elif type(obj) == BinaryOp and obj.op in '-+/*^|':
         return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' ' + obj.op
@@ -185,17 +185,17 @@ def compile_obj(obj):
         
         if type(obj.iftrue) == Compound:
             for item in obj.iftrue.block_items:
-                code += '\t' + compile_obj(item) + '\n'
+                code += '\t' + compile_obj(item, root=True) + '\n'
         else:
-            code += '\t' + compile_obj(obj.iftrue) + '\n'
+            code += '\t' + compile_obj(obj.iftrue, root=True) + '\n'
         
         code += '~___endif' + str(saved) + ' goto ___else' + str(saved) + ': ' + (';' if current_function == 'main' else '') + '\n'
         
         if obj.iffalse != None and type(obj.iffalse) == Compound:
             for item in obj.iffalse.block_items:
-                code += compile_obj(item) + '\n'
+                code += compile_obj(item, root=True) + '\n'
         elif obj.iffalse != None:
-            code += compile_obj(obj.iffalse) + '\n'
+            code += compile_obj(obj.iffalse, root=True) + '\n'
         
         code += '___endif' + str(saved) + ':\n'
         
@@ -363,9 +363,9 @@ def compile_obj(obj):
                 elif type(item) == Break:
                     code += '\t' + '~___endwhile' + str(saved) + ' goto\n'
                 else:
-                    code += '\t' + compile_obj(item) + '\n'
+                    code += '\t' + compile_obj(item, root=True) + '\n'
         else:
-            code += '\t' + compile_obj(obj.stmt) + '\n'
+            code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
         
         code += '~___while' + str(saved) + ' goto ___endwhile' + str(saved) + ':'
         
@@ -384,9 +384,9 @@ def compile_obj(obj):
                 elif type(item) == Break:
                     code += '\t' + '~___enddowhile' + str(saved) + ' goto\n'
                 else:
-                    code += '\t' + compile_obj(item) + '\n'
+                    code += '\t' + compile_obj(item, root=True) + '\n'
         else:
-            code += '\t' + compile_obj(obj.stmt) + '\n'
+            code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
         
         code += compile_cond(obj.cond) + ' ~___dowhile' + str(saved) + ' then ___enddowhile' + str(saved) + ':\n'
         
@@ -396,7 +396,7 @@ def compile_obj(obj):
         code = ''
         saved = current_for
         current_for += 1
-        code += compile_obj(obj.init) + ' '
+        code += compile_obj(obj.init, root=True) + ' '
         code += '___for' + str(saved) + ': ' + compile_cond(obj.cond)
         
         code += ' ~___endfor' + str(saved) + ' else ' + (';' if current_function == 'main' else '') + '\n'
@@ -404,15 +404,15 @@ def compile_obj(obj):
         if type(obj.stmt) == Compound:
             for item in obj.stmt.block_items:
                 if type(item) == Continue:
-                    code += '\t' + compile_obj(obj.next) + ' ~___for' + str(saved) + ' goto\n'
+                    code += '\t' + compile_obj(obj.next, root=True) + ' ~___for' + str(saved) + ' goto\n'
                 elif type(item) == Break:
                     code += '\t' + '~___endfor' + str(saved) + ' goto\n'
                 else:
-                    code += '\t' + compile_obj(item) + '\n'
+                    code += '\t' + compile_obj(item, root=True) + '\n'
         else:
-            code += '\t' + compile_obj(obj.stmt) + '\n'
+            code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
         
-        code += compile_obj(obj.next) + ' ~___for' + str(saved) + ' goto ___endfor' + str(saved) + ':'
+        code += compile_obj(obj.next, root=True) + ' ~___for' + str(saved) + ' goto ___endfor' + str(saved) + ':'
         
         return code
     # switch
@@ -428,7 +428,7 @@ def compile_obj(obj):
                 code += ' ~___switchl' + str(current_switchl) + ' else ' + (';' if current_function == 'main' else '') + '\n'
             
             for o in item.stmts:
-                code += '\t' + compile_obj(o) + '\n'
+                code += '\t' + compile_obj(o, root=True) + '\n'
             
             code += '~___endcase' + str(saved) + ' goto ___switchl' + str(current_switchl) + ': ' + (';' if current_function == 'main' else '') + '\n'
             
@@ -457,5 +457,5 @@ if __name__ == '__main__':
     
     print(get_init_code())
     for item in ast:
-        print(compile_obj(item))
+        print(compile_obj(item, root=True))
 
