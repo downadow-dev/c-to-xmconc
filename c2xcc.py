@@ -228,14 +228,14 @@ def compile_obj(obj, root=False):
         code += '/define ' + current_function + '.' + obj.name + ' :{' \
             + current_function + '.' + obj.name + '___ARRAY__} {__retptr}! +' + '\n'
         if obj.init != None:
-            code += compile_obj(Assignment('=', ID(current_function + '.' + obj.name), obj.init)) + '\n'
+            code += compile_obj(Assignment('=', ID(current_function + '.' + obj.name), obj.init), root=True) + '\n'
         
         return code
     elif type(obj) == Decl:
         code = ''
         code += create_var(obj.name)
         if obj.init != None:
-            code += compile_obj(Assignment('=', ID(obj.name), obj.init)) + '\n'
+            code += compile_obj(Assignment('=', ID(obj.name), obj.init), root=True) + '\n'
         return code
     ######################################################
     elif type(obj) == Cast:
@@ -328,22 +328,22 @@ def compile_obj(obj, root=False):
         return code
     # инкремент и декремент
     elif type(obj) == UnaryOp and obj.op == '++' and type(obj.expr) == ID:
-        return '(' + get_var(obj.expr.name) + ' . ++) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + ' .'
+        return '(' + get_var(obj.expr.name) + ' . ++) ' + get_var(obj.expr.name) + ' = ' + (get_var(obj.expr.name) + ' .' if not root else '')
     elif type(obj) == UnaryOp and obj.op == '--' and type(obj.expr) == ID:
-        return '(' + get_var(obj.expr.name) + ' . --) ' + get_var(obj.expr.name) + ' = ' + get_var(obj.expr.name) + ' .'
+        return '(' + get_var(obj.expr.name) + ' . --) ' + get_var(obj.expr.name) + ' = ' + (get_var(obj.expr.name) + ' .' if not root else '')
     elif type(obj) == UnaryOp and obj.op == 'p++' and type(obj.expr) == ID:
-        return get_var(obj.expr.name) + ' . (' + get_var(obj.expr.name) + ' . ++) ' + get_var(obj.expr.name) + ' ='
+        return (get_var(obj.expr.name) + ' .' if not root else '') + ' (' + get_var(obj.expr.name) + ' . ++) ' + get_var(obj.expr.name) + ' ='
     elif type(obj) == UnaryOp and obj.op == 'p--' and type(obj.expr) == ID:
-        return get_var(obj.expr.name) + ' . (' + get_var(obj.expr.name) + ' . --) ' + get_var(obj.expr.name) + ' ='
+        return (get_var(obj.expr.name) + ' .' if not root else '') + ' (' + get_var(obj.expr.name) + ' . --) ' + get_var(obj.expr.name) + ' ='
     
     elif type(obj) == UnaryOp and obj.op == '++' and type(obj.expr) == ArrayRef:
-        return '(' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' = ' + compile_obj(obj.expr)
+        return '(' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' = ' + (compile_obj(obj.expr) + ' .' if not root else '')
     elif type(obj) == UnaryOp and obj.op == '--' and type(obj.expr) == ArrayRef:
-        return '(' + compile_obj(obj.expr) + ' --) ' + compile_obj(obj.expr)[:-2] + ' = ' + compile_obj(obj.expr)
+        return '(' + compile_obj(obj.expr) + ' --) ' + compile_obj(obj.expr)[:-2] + ' = ' + (compile_obj(obj.expr) + ' .' if not root else '')
     elif type(obj) == UnaryOp and obj.op == 'p++' and type(obj.expr) == ArrayRef:
-        return compile_obj(obj.expr) + ' (' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' ='
+        return (compile_obj(obj.expr) + ' .' if not root else '') + ' (' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' ='
     elif type(obj) == UnaryOp and obj.op == 'p--' and type(obj.expr) == ArrayRef:
-        return compile_obj(obj.expr) + ' (' + compile_obj(obj.expr) + ' --) ' + compile_obj(obj.expr)[:-2] + ' ='
+        return (compile_obj(obj.expr) + ' .' if not root else '') + ' (' + compile_obj(obj.expr) + ' --) ' + compile_obj(obj.expr)[:-2] + ' ='
     # получение адреса переменной/массива
     elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID:
         return get_var(obj.expr.name)

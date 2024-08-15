@@ -25,6 +25,6 @@ int main() {
     char buf[128];
     getargs(buf);
     
-    printf("%d\n", atoi(buf) + atoi(buf));
+    printf("%d\n", 2 * atoi(buf));
 }
 
