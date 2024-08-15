@@ -173,6 +173,7 @@ def compile_obj(obj, root=False):
                 i = int(item.value.value)
             enumerators[item.name] = i
             i += 1
+        return ''
     # вставить enumerator
     elif type(obj) == ID and (obj.name in enumerators):
         return str(enumerators[obj.name])
