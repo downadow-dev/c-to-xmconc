@@ -15,6 +15,8 @@ current_while = 0
 current_switchl = 0
 
 enumerators = {}
+structs = {}
+structures = {}
 
 def reset():
     global variables
@@ -35,6 +37,10 @@ def reset():
     current_switchl = 0
     global enumerators
     enumerators = {}
+    global structures
+    structures = {}
+    global structs
+    structs = {}
 
 # получить переменную/массив
 def get_var(name):
@@ -174,6 +180,21 @@ def compile_obj(obj, root=False):
             enumerators[item.name] = i
             i += 1
         return ''
+    # struct
+    elif type(obj) == Decl and type(obj.type) == Struct:
+        structs[obj.type.name] = obj.type.decls;
+    # структура
+    elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
+        structures[obj.name] = obj.type.type.name
+        
+        code = ''
+        code += '/alloc ' + obj.name + '[' + str(len(structs[obj.type.type.name])) + ']\n'
+        
+        if obj.init != None and type(obj.init) == InitList:
+            for i in range(len(obj.init.exprs)):
+                code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '} ' + str(i) + ' +) =\n'
+        
+        return code
     # вставить enumerator
     elif type(obj) == ID and (obj.name in enumerators):
         return str(enumerators[obj.name])
@@ -238,9 +259,13 @@ def compile_obj(obj, root=False):
             code += compile_obj(item) + '\n'
         return code
     elif type(obj) == Decl and type(obj.type) == ArrayDecl:
-        return create_var(obj.name + '__ARRAY__', int(obj.type.dim.value)) \
+        code = create_var(obj.name + '__ARRAY__', int(obj.type.dim.value)) \
             + create_var(obj.name) \
-            + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' ='
+            + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' =\n'
+        if obj.init != None and type(obj.init) == InitList:
+            for i in range(len(obj.init.exprs)):
+                code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '__ARRAY__' + '} ' + str(i) + ' +) =\n'
+        return code
     elif type(obj) == Decl and (current_function != '' and current_function != 'main') and not 'static' in obj.storage:
         code = ''
         variables += [current_function + '.' + obj.name]
@@ -296,6 +321,12 @@ def compile_obj(obj, root=False):
     # ~выражение
     elif type(obj) == UnaryOp and obj.op == '~':
         return compile_obj(obj.expr) + ' neg --'
+    # поле структуры
+    elif type(obj) == StructRef and obj.type == '.':
+        i = 0
+        while structs[structures[obj.name.name]][i].name != obj.field.name:
+            i += 1
+        return '{' + obj.name.name + '} ' + str(i) + ' + .'
     # переменная
     elif type(obj) == ID:
         return get_var(obj.name) + ' .'
@@ -364,7 +395,14 @@ def compile_obj(obj, root=False):
         return (compile_obj(obj.expr) + ' .' if not root else '') + ' (' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' ='
     elif type(obj) == UnaryOp and obj.op == 'p--' and type(obj.expr) == ArrayRef:
         return (compile_obj(obj.expr) + ' .' if not root else '') + ' (' + compile_obj(obj.expr) + ' --) ' + compile_obj(obj.expr)[:-2] + ' ='
-    # получение адреса переменной/массива
+    # получение адреса переменной/массива/структуры/поля
+    elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and obj.expr.name in structures:
+        return '{' + obj.expr.name + '}'
+    elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == StructRef and obj.expr.type == '.':
+        i = 0
+        while structs[structures[obj.expr.name.name]][i].name != obj.expr.field.name:
+            i += 1
+        return '{' + obj.expr.name.name + '} ' + str(i) + ' +'
     elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID:
         return get_var(obj.expr.name)
     # while
