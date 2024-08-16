@@ -127,7 +127,7 @@ def compile_obj(obj, root=False):
     global structs
     global structures
     
-    if obj = None:
+    if obj == None:
         return ''
     elif type(obj) == ExprList:
         code = ''
