@@ -167,7 +167,7 @@ def compile_obj(obj, root=False):
                 print('', file=sys.stderr)
             
             if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
-                code += '~' + obj.decl.name + '.___start create_thrd1 0 {return} thrd_1 ' + obj.decl.name + '.___start:\n'
+                code += '~' + obj.decl.name + '.___start create_thrd1 0 {return} ' + obj.decl.name + '.___start: thrd_1\n'
             
         
         if obj.body.block_items != None:
