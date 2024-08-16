@@ -349,6 +349,11 @@ def compile_obj(obj, root=False):
     # переменная
     elif type(obj) == ID:
         return get_var(obj.name) + ' .'
+    # создание метки и переход
+    elif type(obj) == Label:
+        return '___L' + obj.name + ':\n' + compile_obj(obj.stmt)
+    elif type(obj) == Goto:
+        return '~___L' + obj.name + ' goto'
     # printf
     elif type(obj) == FuncCall and obj.name.name == 'printf':
         s_format = preprocess_string(obj.args.exprs[0].value)
