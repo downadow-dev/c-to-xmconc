@@ -9,12 +9,8 @@ struct coord {
 
 void print_map(struct coord *c) {
     for(int i = 0; i < HEIGHT; i++) {
-        for(int j = 0; j < WIDTH; j++) {
-            if(i == c->y && j == c->x)
-                putc('%');
-            else
-                putc('.');
-        }
+        for(int j = 0; j < WIDTH; j++)
+            putc((i == c->y && j == c->x) ? '%' : '.');
         printf("\n");
     }
 }
