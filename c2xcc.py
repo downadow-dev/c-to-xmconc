@@ -315,7 +315,7 @@ def compile_obj(obj, root=False):
     elif type(obj) == Decl and (current_function != '' and current_function != 'main') and not 'static' in obj.storage:
         code = ''
         if type(obj.type) == TypeDecl and type(obj.type.type) == Enum:
-            compile_obj(obj.type.type)
+            compile_obj(Decl(None, None, None, None, None, obj.type.type, None, None))
         variables += [current_function + '.' + obj.name]
         code += '/alloc ' + current_function + '.' + obj.name + '___ARRAY__[64]\n'
         code += '/define ' + current_function + '.' + obj.name + ' :{' \
