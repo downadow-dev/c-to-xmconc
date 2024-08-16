@@ -18,6 +18,8 @@ enumerators = {}
 structs = {}
 structures = {}
 
+typedef_structs = []
+
 def reset():
     global variables
     variables = []
@@ -41,6 +43,8 @@ def reset():
     structures = {}
     global structs
     structs = {}
+    global typedef_structs
+    typedef_structs = []
 
 # получить переменную/массив
 def get_var(name):
@@ -126,6 +130,7 @@ def compile_obj(obj, root=False):
     global enumerators
     global structs
     global structures
+    global typedef_structs
     
     if obj == None:
         return ''
@@ -191,7 +196,26 @@ def compile_obj(obj, root=False):
         structs[obj.type.name] = obj.type.decls;
         
         return ''
+    # typedef struct { ... } name
+    elif (type(obj) == Typedef) and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
+        structs[obj.name + '___STRUCT'] = obj.type.type.decls;
+        typedef_structs += [obj.name]
+        
+        return ''
     # структура
+    elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == IdentifierType and obj.type.type.names[0] in typedef_structs:
+        name = obj.type.type.names[0] + '___STRUCT'
+        
+        structures[obj.name] = name
+        
+        code = ''
+        code += '/alloc ' + obj.name + '[' + str(len(structs[name])) + ']\n'
+        
+        if obj.init != None and type(obj.init) == InitList:
+            for i in range(len(obj.init.exprs)):
+                code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '} ' + str(i) + ' +) =\n'
+        
+        return code
     elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
         name = (obj.type.type.name if obj.type.type.name != None else obj.name + '__STRUCT')
         
