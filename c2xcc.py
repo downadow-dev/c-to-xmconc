@@ -87,10 +87,12 @@ def get_init_code():
 
 # "2 == 4" => "2 4 =?" и т. д.
 def compile_cond(op):
-    if type(op) == UnaryOp and op.op == '!':
+    if op == None:
+        return '1' # true
+    elif type(op) == UnaryOp and op.op == '!':
         return compile_cond(op.expr) + ' !'
     elif type(op) != UnaryOp and type(op) != BinaryOp:
-        return compile_obj(op) # 1 = true
+        return compile_obj(op)
     
     elif op.op == '==':
         return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' =?'
@@ -125,7 +127,9 @@ def compile_obj(obj, root=False):
     global structs
     global structures
     
-    if type(obj) == ExprList:
+    if obj = None:
+        return ''
+    elif type(obj) == ExprList:
         code = ''
         for item in obj.exprs:
             code += compile_obj(item) + '\n'
