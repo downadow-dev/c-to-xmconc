@@ -184,12 +184,13 @@ def compile_obj(obj, root=False):
         return code
     # новый enum
     elif type(obj) == Decl and type(obj.type) == Enum:
-        i = 0
-        for item in obj.type.values.enumerators:
-            if item.value != None:
-                i = int(item.value.value)
-            enumerators[item.name] = i
-            i += 1
+        if obj.type.values != None:
+            i = 0
+            for item in obj.type.values.enumerators:
+                if item.value != None:
+                    i = int(item.value.value)
+                enumerators[item.name] = i
+                i += 1
         return ''
     # struct
     elif type(obj) == Decl and type(obj.type) == Struct:
