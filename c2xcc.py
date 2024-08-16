@@ -193,10 +193,14 @@ def compile_obj(obj, root=False):
         return ''
     # структура
     elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
-        structures[obj.name] = obj.type.type.name
+        name = (obj.type.type.name if obj.type.type.name != None else obj.name + '__STRUCT')
+        
+        structures[obj.name] = name
+        if obj.type.type.name == None:
+            structs[name] = obj.type.type.decls
         
         code = ''
-        code += '/alloc ' + obj.name + '[' + str(len(structs[obj.type.type.name])) + ']\n'
+        code += '/alloc ' + obj.name + '[' + str(len(structs[name])) + ']\n'
         
         if obj.init != None and type(obj.init) == InitList:
             for i in range(len(obj.init.exprs)):
