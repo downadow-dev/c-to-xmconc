@@ -29,7 +29,8 @@ char *malloc(size_t size) {
 }
 
 char free(char *ptr) {
-    __last_free_ptr = ptr;
+    if(ptr != NULL)
+        __last_free_ptr = ptr;
 }
 
 char *calloc(size_t n, size_t size) {
