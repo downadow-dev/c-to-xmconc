@@ -16,7 +16,7 @@ int __last_free_ptr = -1;
 char *malloc(size_t size) {
     char *ptr;
     
-    if(__last_free_ptr > -1) {
+    if(__last_free_ptr > -1 && size < MALLOC_BLK_SIZE) {
         ptr = __last_free_ptr;
         __last_free_ptr = -1;
         return ptr;
