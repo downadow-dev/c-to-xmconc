@@ -1,23 +1,18 @@
 #include "malloc.h"
 
-char *xalloc(size_t size) {
-    char *ptr = malloc(size);
-    
-    if(ptr == NULL) {
-        printf("*** error: malloc() returned NULL\n");
-        exit(1);
-    }
-    
-    return ptr;
-}
-
 int main() {
     char buf[16];
     
     printf("Enter a size of new array: ");
     gets(buf, sizeof(buf));
+    
     int len = atoi(buf);
-    char *a = xalloc(len);
+    
+    char *a = malloc(len);
+    if(a == NULL) {
+        printf("error: malloc() returned NULL\n");
+        exit(1);
+    }
     
     memset(a, '\0', len);
     
