@@ -4,29 +4,26 @@
 
 #include "useful.h"
 
-#ifndef MALLOC_BLK_SIZE
-# define MALLOC_BLK_SIZE    30000
-#endif
-
-int __malloc_mem[MALLOC_BLK_SIZE * 28];
-int __malloc_ptr = 0;
+int __malloc_mem[900000];
+int __malloc_ptr = 1;
 
 int __last_free_ptr = -1;
 
 char *malloc(size_t size) {
     char *ptr;
     
-    if(__last_free_ptr > -1 && size < MALLOC_BLK_SIZE) {
+    if(__last_free_ptr > -1 && size <= __malloc_mem[__last_free_ptr - 1]) {
         ptr = __last_free_ptr;
         __last_free_ptr = -1;
         return ptr;
     }
     
     if((__malloc_ptr + size) >= sizeof(__malloc_mem))
-        return NULL;
+        __malloc_ptr = 100000;
     
+    __malloc_mem[__malloc_ptr - 1] = size;
     ptr = &__malloc_mem[__malloc_ptr];
-    __malloc_ptr += (size / MALLOC_BLK_SIZE + 1) * MALLOC_BLK_SIZE;
+    __malloc_ptr += size + 1;
     
     return ptr;
 }
@@ -47,7 +44,11 @@ char *calloc(size_t n, size_t size) {
 }
 
 char *realloc(char *ptr, size_t size) {
-    return size < MALLOC_BLK_SIZE ? ptr : NULL;
+    char *new_p = malloc(size);
+    for(int i = 0; i < *(ptr - 1); i++)
+        new_p[i] = ptr[i];
+    free(ptr);
+    return new_p;
 }
 
 
