@@ -26,6 +26,7 @@ int main() {
     free(b);
     
     char *d = xalloc(64);
+    char *e = xalloc(64);
     
     printf("\n");
     printf("after free(b):\n");
@@ -34,4 +35,5 @@ int main() {
     printf("\ta:\t%u\n", a);
     printf("\tc:\t%u\n", c);
     printf("\td:\t%u\n", d);
+    printf("\te:\t%u\n", e);
 }
