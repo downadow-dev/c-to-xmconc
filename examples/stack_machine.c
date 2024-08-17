@@ -23,12 +23,12 @@ void execute(char *command) {
     // print number
     else if(strcmp(buf, ".")) {
         printf("%d\n", stack[--stackptr]);
-        getc();
+        //getc();
     }
     // print character
     else if(strcmp(buf, "emit")) {
         printf("%c\n", stack[--stackptr]);
-        getc();
+        //getc();
     }
     // addition...
     else if(strcmp(buf, "+")) {
@@ -67,7 +67,7 @@ void execute(char *command) {
     /* unknown command */
     else {
         printf("?\n");
-        sleep(1);
+        //sleep(1);
     }
 }
 
@@ -75,9 +75,9 @@ int main() {
     memset(stack, '\0', sizeof(stack));
     
     while(true) {
-        clear_output();
+        //clear_output();
         
-        printf("[%d]> ", (stackptr > 0 ? stack[stackptr - 1] : 0));
+        printf("> ");
         
         char buf[64];
         memset(buf, '\0', sizeof(buf));
