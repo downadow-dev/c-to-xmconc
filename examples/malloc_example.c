@@ -12,28 +12,25 @@ char *xalloc(size_t size) {
 }
 
 int main() {
-    char *a = xalloc(64);
-    char *b = xalloc(64);
-    char *c = xalloc(64);
+    char buf[16];
     
-    printf("before free(b):\n");
+    printf("Enter a size of new array: ");
+    gets(buf, sizeof(buf));
+    int len = atoi(buf);
+    char *a = xalloc(len);
+    
+    memset(a, '\0', len);
+    
+    int i;
+    for(i = 0; i < len; i++) {
+        printf("Enter a value for a[%d]: ", i);
+        memset(buf, '\0', sizeof(buf));
+        gets(buf, sizeof(buf));
+        a[i] = atoi(buf);
+    }
+    
+    printf("\nAddress of a: %u\nValues:  %d", a, a[0]);
+    for(int j = 1; j < i; j++)
+        printf(", %d", a[j]);
     printf("\n");
-    
-    printf("\ta:\t%u\n", a);
-    printf("\tb:\t%u\n", b);
-    printf("\tc:\t%u\n", c);
-    
-    free(b);
-    
-    char *d = xalloc(64);
-    char *e = xalloc(64);
-    
-    printf("\n");
-    printf("after free(b):\n");
-    printf("\n");
-    
-    printf("\ta:\t%u\n", a);
-    printf("\tc:\t%u\n", c);
-    printf("\td:\t%u\n", d);
-    printf("\te:\t%u\n", e);
 }

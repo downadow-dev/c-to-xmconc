@@ -9,7 +9,10 @@ typedef long size_t;
 
 #define NULL         (void *) 0
 
-#define memset(buf, c, size)   for(int i = 0; i < size; i++) buf[i] = c;
+void memset(char *buf, int c, size_t size) {
+    for(int i = 0; i < size; i++)
+        buf[i] = c;
+}
 
 int atoi(char *s) {
     char s2[8];
