@@ -326,7 +326,7 @@ def compile_obj(obj, root=False):
         for item in obj.decls:
             code += compile_obj(item) + '\n'
         return code
-    elif type(obj) == Decl and type(obj.type) == ArrayDecl:
+    elif type(obj) == Decl and type(obj.type) == ArrayDecl and obj.type.dim != None:
         code = create_var(obj.name + '__ARRAY__', static_int(obj.type.dim)) \
             + create_var(obj.name) \
             + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' =\n'
