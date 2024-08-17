@@ -122,6 +122,21 @@ def compile_cond(op):
     else:
         return compile_obj(op)
 
+
+def static_int(obj):
+    if type(obj) == Constant and obj.type == 'int':
+        return int(obj.value)
+    elif type(obj) == BinaryOp and obj.op == '+':
+        return static_int(obj.left) + static_int(obj.right)
+    elif type(obj) == BinaryOp and obj.op == '-':
+        return static_int(obj.left) - static_int(obj.right)
+    elif type(obj) == BinaryOp and obj.op == '*':
+        return static_int(obj.left) * static_int(obj.right)
+    elif type(obj) == BinaryOp and obj.op == '/':
+        return static_int(obj.left) / static_int(obj.right)
+    elif type(obj) == BinaryOp and obj.op == '%':
+        return static_int(obj.left) % static_int(obj.right)
+
 current_string = -1
 # компиляция числа, переменной и т. д.
 def compile_obj(obj, root=False):
@@ -312,7 +327,7 @@ def compile_obj(obj, root=False):
             code += compile_obj(item) + '\n'
         return code
     elif type(obj) == Decl and type(obj.type) == ArrayDecl:
-        code = create_var(obj.name + '__ARRAY__', int(obj.type.dim.value)) \
+        code = create_var(obj.name + '__ARRAY__', static_int(obj.type.dim)) \
             + create_var(obj.name) \
             + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' =\n'
         if obj.init != None and type(obj.init) == InitList:
