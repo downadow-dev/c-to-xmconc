@@ -5,6 +5,10 @@
 #define false        0
 typedef int bool;
 
+typedef long size_t;
+
+#define NULL         (void *) 0
+
 #define memset(buf, c, size)   for(int i = 0; i < size; i++) buf[i] = c;
 
 int atoi(char *s) {
