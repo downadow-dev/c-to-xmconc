@@ -385,6 +385,10 @@ def compile_obj(obj, root=False):
     elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and \
     ((obj.expr.name + '__ARRAY__') in variables or (current_function + '.' + obj.expr.name + '__ARRAY__') in variables):
         return get_var(obj.expr.name)[:-1] + '__ARRAY__.length}'
+    elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == Typename and \
+    type(obj.expr.type) == TypeDecl and type(obj.expr.type.type) == Struct and \
+    obj.expr.type.type.name in structs:
+        return str(len(structs[obj.expr.type.type.name]))
     elif type(obj) == UnaryOp and obj.op == 'sizeof':
         return '1'
     # -выражение
