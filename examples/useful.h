@@ -23,7 +23,7 @@ int atoi(char *s) {
         j = 1;
     else
         j = 0;
-    for(int i = (sizeof(s2) - strlen(s) - 1); i < (sizeof(s2) - 1); i++)
+    for(int i = (sizeof(s2) - strlen(s) - ((s[0] == '-' || s[0] == '+') ? 0 : 1)); i < (sizeof(s2) - 1) && j < strlen(s); i++)
         s2[i] = s[j++] - (int)'0';
     
     int num = cat(s2[1], s2[2], s2[3], s2[4],
