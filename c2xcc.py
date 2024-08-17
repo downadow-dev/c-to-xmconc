@@ -477,7 +477,7 @@ def compile_obj(obj, root=False):
         return (compile_obj(obj.expr) if not root else '') + ' (' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' ='
     elif type(obj) == UnaryOp and obj.op == 'p--' and (type(obj.expr) == ArrayRef or type(obj.expr) == StructRef):
         return (compile_obj(obj.expr) if not root else '') + ' (' + compile_obj(obj.expr) + ' --) ' + compile_obj(obj.expr)[:-2] + ' ='
-    # получение адреса переменной/массива/структуры/поля
+    # получение адреса переменной/массива/элемента массива/структуры/поля
     elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and obj.expr.name in structures:
         return '{' + obj.expr.name + '}'
     elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == StructRef and obj.expr.type == '.':
@@ -490,8 +490,8 @@ def compile_obj(obj, root=False):
         while structs[structures[obj.expr.name.name]][i].name != obj.expr.field.name:
             i += 1
         return '{' + obj.expr.name.name + '}! ' + str(i) + ' +'
-    elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID:
-        return get_var(obj.expr.name)
+    elif type(obj) == UnaryOp and obj.op == '&':
+        return compile_obj(obj.expr)[:-2]
     # *expr
     elif type(obj) == UnaryOp and obj.op == '*':
         return compile_obj(obj.expr) + ' .'
