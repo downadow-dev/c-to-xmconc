@@ -3,6 +3,7 @@
 
 #define true         1
 #define false        0
+typedef int bool;
 
 #define memset(buf, c, size)   for(int i = 0; i < size; i++) buf[i] = c;
 
@@ -25,6 +26,17 @@ int atoi(char *s) {
         num = -num;
     
     return num;
+}
+
+bool strcmp(char *s1, char *s2) {
+    if(strlen(s1) != strlen(s2))
+        return false;
+    
+    for(int i = 0; s1[i] != '\0'; i++)
+        if(s1[i] != s2[i])
+            return false;
+    
+    return true;
 }
 
 void gets(char *buf, int size) {

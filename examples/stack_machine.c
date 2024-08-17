@@ -21,49 +21,53 @@ void execute(char *command) {
     else if(buf[0] >= (int)'0' && buf[0] <= (int)'9')
         stack[stackptr++] = atoi(buf);
     // print number
-    else if(buf[0] == '.') {
+    else if(strcmp(buf, ".")) {
         printf("%d\n", stack[--stackptr]);
         getc();
     }
     // print character
-    else if(memcmp(buf, "emit", 5) == 0) {
+    else if(strcmp(buf, "emit")) {
         printf("%c\n", stack[--stackptr]);
         getc();
     }
     // addition...
-    else if(buf[0] == '+') {
+    else if(strcmp(buf, "+")) {
         stackptr -= 2;
         stack[stackptr] = stack[stackptr] + stack[stackptr + 1];
         
         stackptr++;
     }
-    else if(buf[0] == '-') {
+    else if(strcmp(buf, "-")) {
         stackptr -= 2;
         stack[stackptr] = stack[stackptr] - stack[stackptr + 1];
         
         stackptr++;
     }
-    else if(buf[0] == '*') {
+    else if(strcmp(buf, "*")) {
         stackptr -= 2;
         stack[stackptr] = stack[stackptr] * stack[stackptr + 1];
         
         stackptr++;
     }
-    else if(buf[0] == '/') {
+    else if(strcmp(buf, "/")) {
         stackptr -= 2;
         stack[stackptr] = stack[stackptr] / stack[stackptr + 1];
         
         stackptr++;
     }
-    else if(buf[0] == '%') {
+    else if(strcmp(buf, "mod")) {
         stackptr -= 2;
         stack[stackptr] = stack[stackptr] % stack[stackptr + 1];
         
         stackptr++;
     }
     /* quit */
-    else {
+    else if(strcmp(buf, "bye"))
         exit(0);
+    /* unknown command */
+    else {
+        printf("?\n");
+        sleep(1);
     }
 }
 
