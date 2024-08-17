@@ -96,26 +96,31 @@ def compile_cond(op):
         return '1' # true
     elif type(op) == UnaryOp and op.op == '!':
         return compile_cond(op.expr) + ' !'
-    elif type(op) != UnaryOp and type(op) != BinaryOp:
+    
+    if type(op) == BinaryOp:
+        if op.op == '==':
+            return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' =?'
+        elif op.op == '!=':
+            return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' !?'
+        elif op.op == '<':
+            return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' lt?'
+        elif op.op == '>':
+            return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' gt?'
+        elif op.op == '>=':
+            return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' -- gt?'
+        elif op.op == '<=':
+            return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' ++ lt?'
+        
+        elif op.op == '&&':
+            return compile_cond(op.left) + ' ' + compile_cond(op.right) + ' ?'
+        elif op.op == '||':
+            return compile_cond(op.left) + ' ' + compile_cond(op.right) + ' |?'
+        
+        else:
+            return compile_obj(op)
+    
+    else:
         return compile_obj(op)
-    
-    elif op.op == '==':
-        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' =?'
-    elif op.op == '!=':
-        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' !?'
-    elif op.op == '<':
-        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' lt?'
-    elif op.op == '>':
-        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' gt?'
-    elif op.op == '>=':
-        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' -- gt?'
-    elif op.op == '<=':
-        return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' ++ lt?'
-    
-    elif op.op == '&&':
-        return compile_cond(op.left) + ' ' + compile_cond(op.right) + ' ?'
-    elif op.op == '||':
-        return compile_cond(op.left) + ' ' + compile_cond(op.right) + ' |?'
 
 current_string = -1
 # компиляция числа, переменной и т. д.
