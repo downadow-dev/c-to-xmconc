@@ -381,10 +381,10 @@ def compile_obj(obj, root=False):
     # элемент массива
     elif type(obj) == ArrayRef:
         return get_var(obj.name.name) + ' . ' + compile_obj(obj.subscript) + ' + .'
-    # sizeof(массив)
-    elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID:
-        return get_var(obj.expr.name)[:-1] + '__ARRAY__.length}'
     # sizeof
+    elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and \
+    ((obj.expr.name + '__ARRAY__') in variables or (current_function + '.' + obj.expr.name + '__ARRAY__') in variables):
+        return get_var(obj.expr.name)[:-1] + '__ARRAY__.length}'
     elif type(obj) == UnaryOp and obj.op == 'sizeof':
         return '1'
     # -выражение
