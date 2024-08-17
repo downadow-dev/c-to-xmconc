@@ -7,6 +7,9 @@ void execute(char *command) {
     char buf[64];
     memset(buf, '\0', sizeof(buf));
     
+    if(stackptr < 0 || stackptr >= 100)
+        exit(1);
+    
     // copying command to clean buf
     for(int i = 0; i < sizeof(buf) && i < strlen(command); i++)
         buf[i] = command[i];
