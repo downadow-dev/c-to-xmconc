@@ -18,7 +18,7 @@ void execute(char *command) {
     else if(buf[0] == '\'')
         stack[stackptr++] = buf[1];
     // number
-    else if(buf[0] >= (int)'0' && buf[0] <= (int)'9')
+    else if((buf[0] >= (int)'0' && buf[0] <= (int)'9') || (buf[1] >= (int)'0' && buf[1] <= (int)'9'))
         stack[stackptr++] = atoi(buf);
     // print number
     else if(strcmp(buf, ".")) {
