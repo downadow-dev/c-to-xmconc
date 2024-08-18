@@ -68,10 +68,10 @@ void *malloc(size_t size) {
 void free(void *ptr) {
     if(ptr == NULL)
         return;
-    else if(ptr >= &__malloc_mem && ptr <= &__malloc_mem[sizeof(__malloc_mem) - 1])
-        __malloc_mem_table[(ptr - &__malloc_mem) / MALLOC_BLK_SIZE] = false;
-    else if(ptr >= &__malloc_largemem && ptr <= &__malloc_largemem[sizeof(__malloc_largemem) - 1])
-        __malloc_largemem_table[(ptr - &__malloc_largemem) / MALLOC_LARGEBLK_SIZE] = false;
+    else if(ptr >= &__malloc_mem[0] && ptr <= &__malloc_mem[sizeof(__malloc_mem) - 1])
+        __malloc_mem_table[(ptr - &__malloc_mem[0]) / MALLOC_BLK_SIZE] = false;
+    else if(ptr >= &__malloc_largemem[0] && ptr <= &__malloc_largemem[sizeof(__malloc_largemem) - 1])
+        __malloc_largemem_table[(ptr - &__malloc_largemem[0]) / MALLOC_LARGEBLK_SIZE] = false;
 }
 
 void *calloc(size_t n, size_t size) {
