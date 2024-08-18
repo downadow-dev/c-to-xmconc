@@ -13,6 +13,8 @@ current_if = 0
 current_for = 0
 current_while = 0
 current_switchl = 0
+current_continue = ''
+current_break = ''
 
 enumerators = {}
 structs = {}
@@ -45,6 +47,10 @@ def reset():
     structs = {}
     global typedef_structs
     typedef_structs = []
+    global current_continue
+    current_continue = ''
+    global current_break
+    current_break = ''
 
 # получить переменную/массив
 def get_var(name):
@@ -152,6 +158,8 @@ def compile_obj(obj, root=False):
     global structs
     global structures
     global typedef_structs
+    global current_continue
+    global current_break
     
     if obj == None:
         return ''
@@ -504,18 +512,15 @@ def compile_obj(obj, root=False):
         code = ''
         saved = current_while
         current_while += 1
+        current_continue = '___while' + str(saved)
+        current_break = '___endwhile' + str(saved)
         code += '___while' + str(saved) + ': ' + compile_cond(obj.cond)
         
         code += ' ~___endwhile' + str(saved) + ' else ' + (';' if current_function == 'main' else '') + '\n'
         
         if type(obj.stmt) == Compound:
             for item in obj.stmt.block_items:
-                if type(item) == Continue:
-                    code += '\t' + '~___while' + str(saved) + ' goto\n'
-                elif type(item) == Break:
-                    code += '\t' + '~___endwhile' + str(saved) + ' goto\n'
-                else:
-                    code += '\t' + compile_obj(item, root=True) + '\n'
+                code += '\t' + compile_obj(item, root=True) + '\n'
         else:
             code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
         
@@ -527,16 +532,13 @@ def compile_obj(obj, root=False):
         code = ''
         saved = current_while
         current_while += 1
+        current_continue = '___dowhile' + str(saved)
+        current_break = '___enddowhile' + str(saved)
         code += '___dowhile' + str(saved) + ':\n'
         
         if type(obj.stmt) == Compound:
             for item in obj.stmt.block_items:
-                if type(item) == Continue:
-                    code += '\t' + '~___dowhile' + str(saved) + ' goto\n'
-                elif type(item) == Break:
-                    code += '\t' + '~___enddowhile' + str(saved) + ' goto\n'
-                else:
-                    code += '\t' + compile_obj(item, root=True) + '\n'
+                code += '\t' + compile_obj(item, root=True) + '\n'
         else:
             code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
         
@@ -548,6 +550,8 @@ def compile_obj(obj, root=False):
         code = ''
         saved = current_for
         current_for += 1
+        current_continue = '___for' + str(saved)
+        current_break = '___endfor' + str(saved)
         code += compile_obj(obj.init, root=True) + ' '
         code += '___for' + str(saved) + ': ' + compile_cond(obj.cond)
         
@@ -555,12 +559,7 @@ def compile_obj(obj, root=False):
         
         if type(obj.stmt) == Compound:
             for item in obj.stmt.block_items:
-                if type(item) == Continue:
-                    code += '\t' + compile_obj(obj.next, root=True) + ' ~___for' + str(saved) + ' goto\n'
-                elif type(item) == Break:
-                    code += '\t' + '~___endfor' + str(saved) + ' goto\n'
-                else:
-                    code += '\t' + compile_obj(item, root=True) + '\n'
+                code += '\t' + compile_obj(item, root=True) + '\n'
         else:
             code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
         
@@ -590,6 +589,10 @@ def compile_obj(obj, root=False):
         
         return code
     ####################
+    elif type(obj) == Continue:
+        return '~' + current_continue + ' goto'
+    elif type(obj) == Break:
+        return '~' + current_break + ' goto'
     elif type(obj) == BinaryOp:
         return compile_cond(obj)
     elif type(obj) == EmptyStatement:
