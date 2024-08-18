@@ -15,8 +15,8 @@ bool __malloc_mem_table[30] = {
 #define MALLOC_LARGEBLK_SIZE      100000
 bool __malloc_largemem_table[5] = {false, false, false, false, false};
 
-char *__malloc_mem[MALLOC_BLK_SIZE * 30];
-char *__malloc_largemem[MALLOC_LARGEBLK_SIZE * 5];
+char __malloc_mem[MALLOC_BLK_SIZE * 30];
+char __malloc_largemem[MALLOC_LARGEBLK_SIZE * 5];
 
 
 /* поиск первого свободного блока */
