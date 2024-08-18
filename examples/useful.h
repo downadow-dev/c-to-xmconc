@@ -10,8 +10,9 @@ typedef long size_t;
 #define NULL         ((void *) 0)
 
 void memset(char *buf, int c, size_t size) {
+    char *p = buf;
     while(size--)
-        *buf++ = c;
+        *p++ = c;
 }
 
 int atoi(char *s) {
