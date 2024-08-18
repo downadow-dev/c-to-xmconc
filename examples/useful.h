@@ -7,7 +7,7 @@ typedef int bool;
 
 typedef long size_t;
 
-#define NULL         (void *) 0
+#define NULL         ((void *) 0)
 
 void memset(char *buf, int c, size_t size) {
     for(int i = 0; i < size; i++)
