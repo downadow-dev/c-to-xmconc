@@ -408,6 +408,10 @@ def compile_obj(obj, root=False):
         type(obj.expr.type) == TypeDecl and type(obj.expr.type.type) == Struct and \
         obj.expr.type.type.name in structs:
             return str(len(structs[obj.expr.type.type.name]))
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == Typename and \
+        type(obj.expr.type) == TypeDecl and type(obj.expr.type.type) == IdentifierType and \
+        obj.expr.type.type.names[0] in typedef_structs:
+            return str(len(structs[obj.expr.type.type.names[0] + '___STRUCT']))
         elif type(obj) == UnaryOp and obj.op == 'sizeof':
             return '1'
         # -выражение
