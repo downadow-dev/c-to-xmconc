@@ -597,7 +597,7 @@ def compile_obj(obj, root=False):
                 for o in item.stmts:
                     code += '\t' + compile_obj(o, root=True) + '\n'
                 
-                code += '~___endcase' + str(saved) + ' goto ___switchl' + str(current_switchl) + ': ' + (';' if current_function == 'main' else '') + '\n'
+                code += '___switchl' + str(current_switchl) + ': ' + (';' if current_function == 'main' else '') + '\n'
                 
                 current_switchl += 1
             code += '___switchl' + str(current_switchl - 1) + ':\n'
