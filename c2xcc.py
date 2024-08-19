@@ -394,6 +394,11 @@ def compile_obj(obj, root=False):
             return str(int(obj.value[2:], base=16))
         elif type(obj) == Constant and obj.type == 'int':
             return str(int(obj.value, base=8))
+        
+        elif type(obj) == Constant and (obj.type == 'float' or obj.type == 'double'):
+            return str(int(obj.value.replace('f', '').split('.')[0]) * 1000 \
+                + int(obj.value.replace('f', '').split('.')[1] + '0' * \
+                    (3 - len(obj.value.replace('f', '').split('.')[1]))))
         # символ
         elif type(obj) == Constant and obj.type == 'char':
             return str(ord(preprocess_string(obj.value)))
