@@ -586,6 +586,7 @@ def compile_obj(obj, root=False):
             code = ''
             
             saved = current_switchl
+            current_break = '___endcase' + str(saved)
             current_switchl += 1
             
             for item in obj.stmt.block_items:
