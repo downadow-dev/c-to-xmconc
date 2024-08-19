@@ -611,7 +611,8 @@ def compile_obj(obj, root=False):
         else:
             return '# (unknown) #\n'
     except Exception:
-        return '# (ERROR) #\n'
+        print('*** compile_obj() error', file=sys.stderr)
+        return ''
 
 ################################################################################
 
