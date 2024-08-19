@@ -625,7 +625,7 @@ if __name__ == '__main__':
     from pycparser import parse_file
     
     if len(sys.argv) == 1:
-        print('usage: ./c2xcc.py FILE [CPP_ARG] [> OUT_FILE]')
+        print('usage: ./c2xcc.py FILE ["CPP_ARGS"] [> OUT_FILE]')
         sys.exit(1)
     
     cppargs = ['-D__XCC_C__=1']
