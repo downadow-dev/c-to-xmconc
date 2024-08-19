@@ -5,6 +5,8 @@
 #define false        0
 typedef int bool;
 
+#define EOF          4   /* Ctrl+D */
+
 typedef long size_t;
 
 #define NULL         ((void *) 0)
