@@ -49,7 +49,7 @@ void *malloc(size_t size) {
         if(free_blk == -1)
             return NULL;
         
-        void *ptr = &__malloc_mem[MALLOC_BLK_SIZE * free_blk];
+        char *ptr = &__malloc_mem[MALLOC_BLK_SIZE * free_blk];
         __malloc_mem_table[free_blk] = true;
         
         return ptr;
@@ -58,14 +58,14 @@ void *malloc(size_t size) {
         if(free_blk == -1)
             return NULL;
         
-        void *ptr = &__malloc_largemem[MALLOC_LARGEBLK_SIZE * free_blk];
+        char *ptr = &__malloc_largemem[MALLOC_LARGEBLK_SIZE * free_blk];
         __malloc_largemem_table[free_blk] = true;
         
         return ptr;
     }
 }
 
-void free(void *ptr) {
+void free(char *ptr) {
     if(ptr == NULL)
         return;
     else if(ptr >= &__malloc_mem[0] && ptr <= &__malloc_mem[sizeof(__malloc_mem) - 1])
@@ -75,7 +75,7 @@ void free(void *ptr) {
 }
 
 void *calloc(size_t n, size_t size) {
-    void *ptr = malloc(n * size);
+    char *ptr = malloc(n * size);
     if(ptr == NULL)
         return NULL;
     
@@ -84,13 +84,13 @@ void *calloc(size_t n, size_t size) {
     return ptr;
 }
 
-void *realloc(void *ptr, size_t new_size) {
+void *realloc(char *ptr, size_t new_size) {
     if(ptr == NULL)
         return malloc(new_size);
     else if(new_size >= MALLOC_LARGEBLK_SIZE)
         return NULL;
     else if(new_size >= MALLOC_BLK_SIZE && ptr >= &__malloc_mem[0] && ptr <= &__malloc_mem[sizeof(__malloc_mem) - 1]) {
-        void *new_p = malloc(new_size);
+        char *new_p = malloc(new_size);
         if(new_p == NULL)
             return NULL;
         
