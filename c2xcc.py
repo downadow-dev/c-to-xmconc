@@ -394,11 +394,6 @@ def compile_obj(obj, root=False):
             return str(int(obj.value[2:], base=16))
         elif type(obj) == Constant and obj.type == 'int':
             return str(int(obj.value, base=8))
-        
-        elif type(obj) == Constant and (obj.type == 'float' or obj.type == 'double'):
-            return str(int(obj.value.replace('f', '').split('.')[0]) * 1000 \
-                + int(obj.value.replace('f', '').split('.')[1] + '0' * \
-                    (3 - len(obj.value.replace('f', '').split('.')[1]))))
         # символ
         elif type(obj) == Constant and obj.type == 'char':
             return str(ord(preprocess_string(obj.value)))
@@ -468,10 +463,6 @@ def compile_obj(obj, root=False):
                     i += 1
                 elif s_format[i] == '%' and (s_format[i + 1] == 'd' or s_format[i + 1] == 'u' or s_format[i + 1] == 'p'):
                     code += compile_obj(etc[ptr]) + ' putn '
-                    ptr += 1
-                    i += 1
-                elif s_format[i] == '%' and s_format[i + 1] == 'f':
-                    code += '(' + compile_obj(etc[ptr]) + ' 1000 /) putn \'.\' putc (' + compile_obj(etc[ptr]) + ' ((dup 1000 /) 1000 *) -) putn '
                     ptr += 1
                     i += 1
                 elif s_format[i] == '\n':
