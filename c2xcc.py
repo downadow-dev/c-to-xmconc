@@ -388,7 +388,7 @@ def compile_obj(obj, root=False):
         return str(ord(preprocess_string(obj.value)))
     # элемент массива
     elif type(obj) == ArrayRef:
-        return get_var(obj.name.name) + ' . ' + compile_obj(obj.subscript) + ' + .'
+        return compile_obj(obj.name) + ' ' + compile_obj(obj.subscript) + ' + .'
     # sizeof
     elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and \
     ((obj.expr.name + '__ARRAY__') in variables or (current_function + '.' + obj.expr.name + '__ARRAY__') in variables):
