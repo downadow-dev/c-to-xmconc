@@ -341,6 +341,13 @@ def compile_obj(obj, root=False):
         if obj.init != None and type(obj.init) == InitList:
             for i in range(len(obj.init.exprs)):
                 code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '__ARRAY__' + '} ' + str(i) + ' +) =\n'
+        # если массив является двумерным
+        if type(obj.type.type) == ArrayDecl:
+            for i in range(static_int(obj.type.dim)):
+                code += create_var(obj.name + '__ARRAY__' + str(i), static_int(obj.type.type.dim)) \
+                    + get_var(obj.name + '__ARRAY__' + str(i)) + ' ' \
+                    + (get_var(obj.name) + ' . ' + str(i) + ' +') \
+                    + ' =\n'
         return code
     elif type(obj) == Decl and (current_function != '' and current_function != 'main') and not 'static' in obj.storage:
         code = ''
