@@ -164,6 +164,11 @@ def compile_obj(obj, root=False):
     try:
         if obj == None:
             return ''
+        elif type(obj) == Compound:
+            code = ''
+            for item in obj.block_items:
+                code += compile_obj(item) + '\n'
+            return code
         elif type(obj) == ExprList:
             code = ''
             for item in obj.exprs:
