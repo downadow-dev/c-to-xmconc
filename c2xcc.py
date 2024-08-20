@@ -471,7 +471,7 @@ def compile_obj(obj, root=False):
                     code += compile_obj(etc[ptr]) + ' puts '
                     ptr += 1
                     i += 1
-                elif s_format[i] == '%' and (s_format[i + 1] == 'd' or s_format[i + 1] == 'u' or s_format[i + 1] == 'p'):
+                elif s_format[i] == '%' and (s_format[i + 1] == 'd' or s_format[i + 1] == 'u' or s_format[i + 1] == 'i' or s_format[i + 1] == 'p'):
                     code += compile_obj(etc[ptr]) + ' putn '
                     ptr += 1
                     i += 1
