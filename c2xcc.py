@@ -439,7 +439,7 @@ def compile_obj(obj, root=False):
             return '___L' + current_function + '___' + obj.name + ':\n' + compile_obj(obj.stmt)
         elif type(obj) == Goto:
             return '~___L' + current_function + '___' + obj.name + ' goto'
-        elif type(obj) == FuncCall and obj.name.name == '__goto':
+        elif type(obj) == FuncCall and obj.name.name == '__jump':
             return compile_obj(obj.args.exprs[0]) + ' goto'
         ###################################
         elif type(obj) == FuncCall and obj.name.name == '__extern_label':
