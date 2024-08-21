@@ -201,7 +201,7 @@ def compile_obj(obj, root=False):
                     print('', file=sys.stderr)
                 
                 if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
-                    code += '~' + obj.decl.name + '.___start create_thrd1 {return} ' + obj.decl.name + '.___start: thrd_1\n'
+                    code += '~' + obj.decl.name + '.___start create_thrd1 0 {return} ' + obj.decl.name + '.___start: thrd_1\n'
                 
             
             if obj.body.block_items != None:
@@ -211,7 +211,7 @@ def compile_obj(obj, root=False):
             if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
                 code += '\nhalt thrd_0\n'
             else:
-                code += '\n' + ('{return}' if current_function != 'main' else '0 exit')
+                code += '\n0 ' + ('{return}' if current_function != 'main' else 'exit')
             code += '\n' + obj.decl.name + '___END:\n'
             
             current_function = ''
@@ -232,7 +232,7 @@ def compile_obj(obj, root=False):
             structs[obj.type.name] = obj.type.decls;
             
             return ''
-        # typedef struct { ... } name
+        # typedef struct ... name
         elif (type(obj) == Typedef) and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
             if obj.type.type.decls != None:
                 structs[obj.name + '___STRUCT'] = obj.type.type.decls
@@ -332,7 +332,7 @@ def compile_obj(obj, root=False):
             return '\n"' + preprocess_string(obj.value) + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
         # return
         elif type(obj) == Return:
-            return compile_obj(obj.expr) + ' ' + ('{return}' if current_function != 'main' else 'exit')
+            return (compile_obj(obj.expr) if obj.expr != None else '0') + ' ' + ('{return}' if current_function != 'main' else 'exit')
         # FuncDecl
         elif type(obj) == Decl and type(obj.type) == FuncDecl and current_function == '':
             functions += [obj.name]
@@ -495,6 +495,8 @@ def compile_obj(obj, root=False):
             for o in exprs:
                 code += compile_obj(o) + ' '
             code += ('@' if obj.name.name in functions else '') + obj.name.name
+            if obj.name.name in functions and root:
+                code += ' drop'
             return code
         # инкремент и декремент
         elif type(obj) == UnaryOp and obj.op == '++' and type(obj.expr) == ID:
