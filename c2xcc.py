@@ -479,6 +479,8 @@ def compile_obj(obj, root=False):
                     code += 'newline '
                 elif s_format[i] == '\b':
                     code += 'backspace '
+                elif s_format[i] == '\r':
+                    code += 'cr '
                 else:
                     code += str(ord(s_format[i])) + ' putc '
                 

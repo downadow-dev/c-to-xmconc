@@ -7,12 +7,7 @@ __thread1_t counter() {
     counter_active = 1;
     
     for(static int i = 0; counter_active; i++) {
-        printf("%d", i);
-        
-        if(i < 10)        printf("\b");
-        else if(i < 100)  printf("\b\b");
-        else              printf("\b\b\b");
-        
+        printf("\r%d", i);
         sleep(1);
     }
     
