@@ -395,10 +395,16 @@ def compile_obj(obj, root=False):
         # число
         elif type(obj) == Constant and obj.type == 'int' and not obj.value.startswith('0'):
             return str(int(obj.value, base=0))
+        elif type(obj) == Constant and (obj.type == 'unsigned int' or obj.type == 'long int') and not obj.value.startswith('0'):
+            return str(int(obj.value[:-1], base=0))
         elif type(obj) == Constant and obj.type == 'int' and obj.value.startswith('0x'):
             return str(int(obj.value[2:], base=16))
+        elif type(obj) == Constant and (obj.type == 'unsigned int' or obj.type == 'long int') and obj.value.startswith('0x'):
+            return str(int(obj.value[2:][:-1], base=16))
         elif type(obj) == Constant and obj.type == 'int':
             return str(int(obj.value, base=8))
+        elif type(obj) == Constant and (obj.type == 'unsigned int' or obj.type == 'long int'):
+            return str(int(obj.value[:-1], base=8))
         # символ
         elif type(obj) == Constant and obj.type == 'char':
             return str(ord(preprocess_string(obj.value)))
