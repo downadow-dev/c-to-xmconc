@@ -344,12 +344,18 @@ def compile_obj(obj, root=False):
                 code += compile_obj(item) + '\n'
             return code
         elif type(obj) == Decl and type(obj.type) == ArrayDecl and (obj.type.dim != None or obj.init != None):
-            code = create_var(obj.name + '__ARRAY__', (static_int(obj.type.dim) if obj.type.dim != None else len(obj.init.exprs))) \
+            code = create_var(obj.name + '__ARRAY__', (static_int(obj.type.dim) if obj.type.dim != None else \
+              (len(obj.init.exprs) if type(obj.init) == InitList else len(preprocess_string(obj.init.value)) + 1))) \
                 + create_var(obj.name) \
                 + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' =\n'
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
                     code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '__ARRAY__' + '} ' + str(i) + ' +) =\n'
+            elif obj.init != None and type(obj.init) == Constant:
+                for i in range(len(preprocess_string(obj.init.value))):
+                    code += str(ord(preprocess_string(obj.init.value)[i])) + ' ({' + obj.name + '__ARRAY__' + '} ' + str(i) + ' +) =\n'
+                code += '0 ({' + obj.name + '__ARRAY__' + '} ' + str(len(preprocess_string(obj.init.value))) + ' +) =\n'
+            
             # если массив является двумерным
             if type(obj.type.type) == ArrayDecl:
                 for i in range(static_int(obj.type.dim)):
