@@ -1,21 +1,31 @@
-#define true   1
-#define false  0
 
-typedef void __thrd1_t;
+typedef void __thread1_t;  /* тип должен начинаться с ``__thr`` */
 
+int counter_active;
 
-__thrd1_t a() {
-    for(static int i = 0; true; i++) {
-        printf("%d: thread 1\n", i);
-        msleep(1400);
+__thread1_t counter() {
+    counter_active = 1;
+    
+    for(static int i = 0; counter_active; i++) {
+        printf("%d", i);
+        
+        if(i < 10)        printf("\b");
+        else if(i < 100)  printf("\b\b");
+        else              printf("\b\b\b");
+        
+        sleep(1);
     }
+    
+    halt();
 }
 
 int main() {
-    a();
+    counter();
     
-    for(int i = 0; true; i++) {
-        printf("%d: thread 0\n", i);
-        sleep(1);
-    }
+    getc();
+    
+    counter_active = 0;
+    sleep(1);
+    exit(0);
 }
+
