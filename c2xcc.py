@@ -598,7 +598,7 @@ def compile_obj(obj, root=False):
             
             if type(obj.stmt) == Compound:
                 for item in obj.stmt.block_items:
-                    current_continue = '___for' + str(saved)
+                    current_continue = '___preendfor' + str(saved)
                     current_break = '___endfor' + str(saved)
                     code += '\t' + compile_obj(item, root=True) + '\n'
             else:
