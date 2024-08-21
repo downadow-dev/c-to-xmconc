@@ -393,18 +393,12 @@ def compile_obj(obj, root=False):
             
             return code
         # число
-        elif type(obj) == Constant and obj.type == 'int' and not obj.value.startswith('0'):
-            return str(int(obj.value, base=0))
-        elif type(obj) == Constant and (obj.type == 'unsigned int' or obj.type == 'long int') and not obj.value.startswith('0'):
-            return str(int(obj.value[:-1], base=0))
-        elif type(obj) == Constant and obj.type == 'int' and obj.value.startswith('0x'):
-            return str(int(obj.value[2:], base=16))
-        elif type(obj) == Constant and (obj.type == 'unsigned int' or obj.type == 'long int') and obj.value.startswith('0x'):
-            return str(int(obj.value[2:][:-1], base=16))
-        elif type(obj) == Constant and obj.type == 'int':
-            return str(int(obj.value, base=8))
-        elif type(obj) == Constant and (obj.type == 'unsigned int' or obj.type == 'long int'):
-            return str(int(obj.value[:-1], base=8))
+        elif type(obj) == Constant and (obj.type == 'int' or obj.type.startswith('unsigned') or obj.type.startswith('long')) and not obj.value.startswith('0'):
+            return str(int(obj.value.lower().replace('l', '').replace('u', ''), base=0))
+        elif type(obj) == Constant and (obj.type == 'int' or obj.type.startswith('unsigned') or obj.type.startswith('long')) and obj.value.startswith('0x'):
+            return str(int(obj.value[2:].lower().replace('l', '').replace('u', ''), base=16))
+        elif type(obj) == Constant and (obj.type == 'int' or obj.type.startswith('unsigned') or obj.type.startswith('long')):
+            return str(int(obj.value.lower().replace('l', '').replace('u', ''), base=8))
         # символ
         elif type(obj) == Constant and obj.type == 'char':
             return str(ord(preprocess_string(obj.value)))
