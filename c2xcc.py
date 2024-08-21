@@ -184,6 +184,12 @@ def compile_obj(obj, root=False):
             elif obj.decl.name == 'main':
                 code += 'main:\n'
                 current_function = 'main'
+                
+                if obj.decl.type.args != None:
+                    code += '/alloc ' + obj.decl.type.args.params[0].name + '\n'
+                    code += '/alloc ' + obj.decl.type.args.params[1].name + '\n'
+                    code += '{' + obj.decl.type.args.params[1].name + '}' \
+                        + ' @___get_args {' + obj.decl.type.args.params[0].name + '} =\n'
             else:
                 code += '~' + obj.decl.name + '___END goto\n'
                 
