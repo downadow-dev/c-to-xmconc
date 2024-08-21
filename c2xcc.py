@@ -589,7 +589,7 @@ def compile_obj(obj, root=False):
             code = ''
             saved = current_for
             current_for += 1
-            current_continue = '___for' + str(saved)
+            current_continue = '___preendfor' + str(saved)
             current_break = '___endfor' + str(saved)
             code += compile_obj(obj.init, root=True) + ' '
             code += '___for' + str(saved) + ': ' + compile_cond(obj.cond)
@@ -604,7 +604,7 @@ def compile_obj(obj, root=False):
             else:
                 code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
             
-            code += compile_obj(obj.next, root=True) + ' ~___for' + str(saved) + ' goto ___endfor' + str(saved) + ':'
+            code += '___preendfor' + str(saved) + ': ' + compile_obj(obj.next, root=True) + ' ~___for' + str(saved) + ' goto ___endfor' + str(saved) + ':'
             
             return code
         # switch
