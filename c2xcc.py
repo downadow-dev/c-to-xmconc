@@ -549,6 +549,8 @@ def compile_obj(obj, root=False):
             
             if type(obj.stmt) == Compound:
                 for item in obj.stmt.block_items:
+                    current_continue = '___while' + str(saved)
+                    current_break = '___endwhile' + str(saved)
                     code += '\t' + compile_obj(item, root=True) + '\n'
             else:
                 code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
@@ -567,6 +569,8 @@ def compile_obj(obj, root=False):
             
             if type(obj.stmt) == Compound:
                 for item in obj.stmt.block_items:
+                    current_continue = '___dowhile' + str(saved)
+                    current_break = '___enddowhile' + str(saved)
                     code += '\t' + compile_obj(item, root=True) + '\n'
             else:
                 code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
@@ -588,6 +592,8 @@ def compile_obj(obj, root=False):
             
             if type(obj.stmt) == Compound:
                 for item in obj.stmt.block_items:
+                    current_continue = '___for' + str(saved)
+                    current_break = '___endfor' + str(saved)
                     code += '\t' + compile_obj(item, root=True) + '\n'
             else:
                 code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
@@ -609,6 +615,7 @@ def compile_obj(obj, root=False):
                     code += ' ~___switchl' + str(current_switchl) + ' else ' + (';' if current_function == 'main' else '') + '\n'
                 
                 for o in item.stmts:
+                    current_break = '___endcase' + str(saved)
                     code += '\t' + compile_obj(o, root=True) + '\n'
                 
                 code += '___switchl' + str(current_switchl) + ': ' + (';' if current_function == 'main' else '') + '\n'
