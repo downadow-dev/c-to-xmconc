@@ -7,7 +7,7 @@ int ___get_args(char *argv_ptr) {
     static char args[128];
     getargs(args);
     
-    static char *argv[16];
+    static char *argv[32];
     int argc = (args[0] == '\0' ? 1 : 2);
     argv[0] = "<prog>";
     argv[1] = &args[0];
