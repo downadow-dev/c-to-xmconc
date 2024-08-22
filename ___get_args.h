@@ -4,10 +4,10 @@
 #define ___get_args_h   1
 
 int ___get_args(char *argv_ptr) {
-    char args[128];
+    static char args[128];
     getargs(args);
     
-    char *argv[16];
+    static char *argv[16];
     int argc = (args[0] == '\0' ? 1 : 2);
     argv[0] = "<prog>";
     argv[1] = &args[0];
