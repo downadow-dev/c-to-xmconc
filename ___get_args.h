@@ -22,7 +22,7 @@ int ___get_args(char *argv_ptr) {
             args[i] = ' ';
     }
     
-    *(argv_ptr) = argv;
+    *(argv_ptr) = &argv[0];
     
     return argc;
 }
