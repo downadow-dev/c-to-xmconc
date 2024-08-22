@@ -242,6 +242,10 @@ def compile_obj(obj, root=False):
             structs[obj.type.name] = obj.type.decls;
             
             return ''
+        #########################
+        elif (type(obj) == Typedef) and type(obj.type) == TypeDecl and type(obj.type.type) == Enum:
+            compile_obj(Decl(None, None, None, None, None, obj.type.type, None, None))
+            return ''
         # typedef struct ... name
         elif (type(obj) == Typedef) and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
             if obj.type.type.decls != None:
