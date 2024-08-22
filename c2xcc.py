@@ -185,7 +185,7 @@ def compile_obj(obj, root=False):
                 code += 'main:\n'
                 current_function = 'main'
                 
-                if obj.decl.type.args != None:
+                if obj.decl.type.args != None and len(obj.decl.type.args.params) > 1:
                     if not '___get_args' in functions:
                         print('*** ERROR while compiling main(): please give "-include ___get_args.h"', file=sys.stderr)
                         return ''
