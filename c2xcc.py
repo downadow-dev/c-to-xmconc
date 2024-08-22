@@ -123,7 +123,7 @@ def compile_cond(op):
             return compile_cond(op.left) + ' ' + compile_cond(op.right) + ' |?'
         
         else:
-            return compile_obj(op)
+            return compile_obj(op) + ' 0 !?'
     
     else:
         return compile_obj(op)
