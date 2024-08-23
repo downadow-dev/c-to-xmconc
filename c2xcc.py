@@ -303,8 +303,8 @@ def compile_obj(obj, root=False):
         # присваивание
         elif type(obj) == Assignment and obj.op == '=':
             return compile_obj(obj.rvalue) + ' ' + compile_obj(obj.lvalue)[:-2] + ' = ' + (compile_obj(obj.lvalue) if not root else '')
-        elif type(obj) == Assignment and obj.op[0] in '+-/*^%|&' and obj.op.endswith('='):
-            return '(' + compile_obj(obj.lvalue) + ' ' + compile_obj(obj.rvalue) + ' ' + obj.op[0].replace('%', 'mod').replace('&', 'and') + ') ' + compile_obj(obj.lvalue)[:-2] + ' = ' + (compile_obj(obj.lvalue) if not root else '')
+        elif type(obj) == Assignment and obj.op[0] in '+-/*^%|&<>' and obj.op.endswith('='):
+            return '(' + compile_obj(obj.lvalue) + ' ' + compile_obj(obj.rvalue) + ' ' + obj.op[0].replace('%', 'mod').replace('&', 'and').replace('<', 'lsh').replace('>', 'rsh') + ') ' + compile_obj(obj.lvalue)[:-2] + ' = ' + (compile_obj(obj.lvalue) if not root else '')
         # сложение, вычитание и др.
         elif type(obj) == BinaryOp and obj.op in '-+/*^|%':
             return compile_obj(obj.left) + ' ' + compile_obj(obj.right) + ' ' + obj.op.replace('%', 'mod')
