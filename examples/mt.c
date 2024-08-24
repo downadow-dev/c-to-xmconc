@@ -6,7 +6,8 @@ int counter_active;
 __thread1_t counter() {
     counter_active = 1;
     
-    for(static int i = 0; counter_active; i++) {
+    static int i;
+    for(i = 0; counter_active; i++) {
         printf("\r%d", i);
         sleep(1);
     }
