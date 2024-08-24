@@ -17,6 +17,9 @@ typedef void __thread1_t;
 #define putchar(c)   putc(c)
 #define getchar()    getc()
 
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
+
 void memset(char *buf, int c, size_t size) {
     char *p = buf;
     while(size--)
