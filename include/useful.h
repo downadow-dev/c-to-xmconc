@@ -20,10 +20,11 @@ typedef void __thread1_t;
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
-void memset(char *buf, int c, size_t size) {
+char *memset(char *buf, int c, size_t size) {
     char *p = buf;
     while(size--)
         *p++ = c;
+    return buf;
 }
 
 int atoi(char *s) {
