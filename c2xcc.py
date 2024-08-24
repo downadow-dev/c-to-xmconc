@@ -187,7 +187,7 @@ def compile_obj(obj, root=False):
                 
                 if obj.decl.type.args != None and len(obj.decl.type.args.params) > 1:
                     if not '___get_args' in functions:
-                        print('*** ERROR while compiling main(): please give "-include ___get_args.h"', file=sys.stderr)
+                        print('*** ERROR while compiling main(): please give "-include include/___get_args.h"', file=sys.stderr)
                         return ''
                     
                     code += '/alloc ' + obj.decl.type.args.params[0].name + '\n'

@@ -1,4 +1,6 @@
 #ifndef __useful_h
+#ifdef  __XCC_C__
+
 #define __useful_h   1
 
 #define true         1
@@ -8,8 +10,12 @@ typedef int bool;
 #define EOT          4   /* Ctrl+D */
 
 typedef long size_t;
+typedef void __thread1_t;
 
 #define NULL         ((void *) 0)
+
+#define putchar(c)   putc(c)
+#define getchar()    getc()
 
 void memset(char *buf, int c, size_t size) {
     char *p = buf;
@@ -64,5 +70,17 @@ void gets(char *buf, int size) {
     buf[i] = '\0';
 }
 
+int __alloca_stack[250000];
+int __alloca_stackptr = 0;
+void *alloca(size_t size) {
+    if(__alloca_stackptr + size > sizeof(__alloca_stack))
+        __alloca_stackptr = 0;
+    
+    void *p = &__alloca_stack[__alloca_stackptr];
+    __alloca_stackptr += size;
+    return p;
+}
 
+
+#endif
 #endif

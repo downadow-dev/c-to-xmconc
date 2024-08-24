@@ -1,4 +1,4 @@
-#include "useful.h"
+#include <useful.h>
 
 int stack[100];
 int stackptr = 0;
@@ -26,12 +26,12 @@ void execute(char *command) {
     // print number
     else if(strcmp(buf, ".")) {
         printf("%d\n", stack[--stackptr]);
-        //getc();
+        //getchar();
     }
     // print character
     else if(strcmp(buf, "emit")) {
         printf("%c\n", stack[--stackptr]);
-        //getc();
+        //getchar();
     }
     // addition...
     else if(strcmp(buf, "+")) {
