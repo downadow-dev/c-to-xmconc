@@ -266,7 +266,7 @@ def compile_obj(obj, root=False):
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
-                    code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '} ' + str(i) + ' +) =\n'
+                    code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
             
             return code
         elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
@@ -281,7 +281,7 @@ def compile_obj(obj, root=False):
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
-                    code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '} ' + str(i) + ' +) =\n'
+                    code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
             
             return code
         # указатель на структуру
