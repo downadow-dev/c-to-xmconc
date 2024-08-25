@@ -222,7 +222,9 @@ def compile_obj(obj, root=False):
                 code += '\nhalt thrd_0\n'
             else:
                 code += '\n0 ' + ('{return}' if current_function != 'main' else 'exit')
-            code += '\n' + obj.decl.name + '___END:\n'
+            
+            if obj.decl.name != 'main':
+                code += '\n' + obj.decl.name + '___END:\n'
             
             current_function = ''
             
