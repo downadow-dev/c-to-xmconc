@@ -84,7 +84,7 @@ void gets(char *buf, int size) {
 int __alloca_stack[250000];
 int __alloca_stackptr = 0;
 void *alloca(size_t size) {
-    if(__alloca_stackptr + size > sizeof(__alloca_stack))
+    if(__alloca_stackptr + size >= sizeof(__alloca_stack))
         __alloca_stackptr = 0;
     
     void *p = &__alloca_stack[__alloca_stackptr];
