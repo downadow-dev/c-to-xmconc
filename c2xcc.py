@@ -310,6 +310,8 @@ def compile_obj(obj, root=False):
         # вставить адрес функции
         elif type(obj) == ID and (obj.name == 'main' or obj.name in functions):
             return '~' + obj.name
+        elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and (obj.expr.name == 'main' or obj.expr.name in functions):
+            return '~' + obj.expr.name
         # присваивание
         elif type(obj) == Assignment and obj.op == '=':
             return compile_obj(obj.rvalue) + ' ' + compile_obj(obj.lvalue)[:-2] + ' = ' + (compile_obj(obj.lvalue) if not root else '')
