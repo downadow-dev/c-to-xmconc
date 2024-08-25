@@ -162,7 +162,7 @@ def compile_obj(obj, root=False):
     global current_break
     
     try:
-        if obj == None:
+        if obj == None or (type(obj) == Decl and 'extern' in obj.storage):
             return ''
         elif type(obj) == Compound:
             code = ''
