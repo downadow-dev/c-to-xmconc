@@ -369,8 +369,8 @@ def compile_obj(obj, root=False):
                     code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '__ARRAY__' + '} ' + str(i) + ' +) =\n'
             elif obj.init != None and type(obj.init) == Constant:
                 for i in range(len(preprocess_string(obj.init.value))):
-                    code += str(ord(preprocess_string(obj.init.value)[i])) + ' ({' + obj.name + '__ARRAY__' + '} ' + str(i) + ' +) =\n'
-                code += '0 ({' + obj.name + '__ARRAY__' + '} ' + str(len(preprocess_string(obj.init.value))) + ' +) =\n'
+                    code += str(ord(preprocess_string(obj.init.value)[i])) + ' (' + get_var(obj.name + '__ARRAY__') + ' ' + str(i) + ' +) =\n'
+                code += '0 (' + get_var(obj.name + '__ARRAY__') + ' ' + str(len(preprocess_string(obj.init.value))) + ' +) =\n'
             
             # если массив является двумерным
             if type(obj.type.type) == ArrayDecl:
