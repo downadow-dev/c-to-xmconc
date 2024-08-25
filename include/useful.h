@@ -27,6 +27,13 @@ char *memset(char *buf, int c, size_t size) {
     return buf;
 }
 
+#define memmove memcpy
+char *memcpy(char *dest, char *src, size_t n) {
+    for(int i = 0; i < n; i++)
+        dest[i] = src[i];
+    return dest;
+}
+
 int atoi(char *s) {
     char s2[8];
     memset(s2, '\0', sizeof(s2));
