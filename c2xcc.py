@@ -366,7 +366,7 @@ def compile_obj(obj, root=False):
                 + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' =\n'
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
-                    code += compile_obj(obj.init.exprs[i]) + ' ({' + obj.name + '__ARRAY__' + '} ' + str(i) + ' +) =\n'
+                    code += compile_obj(obj.init.exprs[i]) + ' (' + get_var(obj.name + '__ARRAY__') + ' ' + str(i) + ' +) =\n'
             elif obj.init != None and type(obj.init) == Constant:
                 for i in range(len(preprocess_string(obj.init.value))):
                     code += str(ord(preprocess_string(obj.init.value)[i])) + ' (' + get_var(obj.name + '__ARRAY__') + ' ' + str(i) + ' +) =\n'
