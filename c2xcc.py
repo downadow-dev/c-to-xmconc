@@ -205,8 +205,16 @@ def compile_obj(obj, root=False):
                 
                 try:
                     for param in obj.decl.type.args.params:
-                        code += compile_obj(param) + '\n'
-                        code += get_var(param.name) + ' =\n'
+                        if type(param) == Decl and type(param.type) == FuncDecl:
+                            code += '/alloc ___tmp___' + param.name + '\n'
+                            code += '{___tmp___' + param.name + '} =\n'
+                            code += '~' + param.name + '___end goto\n'
+                            code += param.name + ': {___tmp___' + param.name + '}! goto\n'
+                            code += param.name + '___end:\n'
+                            functions += [param.name]
+                        else:
+                            code += compile_obj(param) + '\n'
+                            code += get_var(param.name) + ' =\n'
                 except Exception:
                     print('', file=sys.stderr)
                 
