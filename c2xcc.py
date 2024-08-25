@@ -205,7 +205,7 @@ def compile_obj(obj, root=False):
                 
                 try:
                     for param in obj.decl.type.args.params:
-                        if type(param) == Decl and type(param.type) == FuncDecl:
+                        if type(param) == Decl and (type(param.type) == FuncDecl or (type(param.type) == PtrDecl and type(param.type.type) == FuncDecl)):
                             code += '/alloc ___tmp___' + param.name + '\n'
                             code += '{___tmp___' + param.name + '} =\n'
                             code += '~' + param.name + '___end goto\n'
