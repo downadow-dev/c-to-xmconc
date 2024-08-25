@@ -469,6 +469,8 @@ def compile_obj(obj, root=False):
         ###################################
         elif type(obj) == FuncCall and obj.name.name == '__extern_label':
             return '<' + obj.args.exprs[0].value[1:-1] + '>'
+        elif type(obj) == FuncCall and obj.name.name == 'pow':
+            return compile_obj(obj.args.exprs[0]) + ' ' + compile_obj(obj.args.exprs[1]) + ' **'
         # printf
         elif type(obj) == FuncCall and obj.name.name == 'printf':
             s_format = preprocess_string(obj.args.exprs[0].value)
