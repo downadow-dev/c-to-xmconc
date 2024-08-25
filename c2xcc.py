@@ -450,12 +450,12 @@ def compile_obj(obj, root=False):
             i = 0
             while structs[structures[obj.name.name]][i].name != obj.field.name:
                 i += 1
-            return '{' + obj.name.name + '} ' + str(i) + ' + .'
+            return '{' + obj.name.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '.'
         elif type(obj) == StructRef and obj.type == '->':
             i = 0
             while structs[structures[obj.name.name]][i].name != obj.field.name:
                 i += 1
-            return '{' + obj.name.name + '}! ' + str(i) + ' + .'
+            return '{' + obj.name.name + '}! ' + ((str(i) + ' + ') if i != 0 else '') + '.'
         # переменная
         elif type(obj) == ID:
             return get_var(obj.name) + ' .'
