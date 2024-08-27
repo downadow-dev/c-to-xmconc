@@ -13,6 +13,15 @@ int *mem = (int *) 0;
 
 #define UID_USER          1
 #define UID_ROOT          0
+
+#define BLACK             0
+#define WHITE             1
+#define GREEN             2
+#define BLUE              3
+#define GREEN2            4
+#define GREY              5
+#define RED               6
+#define YELLOW            7
 /**********************/
 
 #ifndef NULL
