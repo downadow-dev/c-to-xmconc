@@ -3,7 +3,7 @@
 
 #define ___get_args_h   1
 
-int ___get_args(char *argv_ptr) {
+int ___get_args(char ***argv_ptr) {
     static char args[128];
     getargs(args);
     
