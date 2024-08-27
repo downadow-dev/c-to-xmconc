@@ -1,11 +1,9 @@
 #ifndef __comm_h
 #ifdef __XCC_C__
 
-#define __comm_h     1
+#include <xmtwolime.h>
 
-#ifndef NULL
-#define NULL              ((void *) 0)
-#endif
+#define __comm_h     1
 
 int comm_delay = 60;   /* вы можете изменить это в своей программе */
 

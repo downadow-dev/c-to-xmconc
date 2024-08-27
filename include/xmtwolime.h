@@ -15,6 +15,10 @@ int *mem = (int *) 0;
 #define UID_ROOT          0
 /**********************/
 
+#ifndef NULL
+#define NULL              ((void *) 0)
+#endif
+
 
 #endif
 #endif
