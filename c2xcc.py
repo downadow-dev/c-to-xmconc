@@ -174,6 +174,9 @@ def compile_obj(obj, root=False):
             for item in obj.exprs:
                 code += compile_obj(item) + '\n'
             return code
+        elif type(obj) == ID and obj.name == '__func__':
+            current_string += 1
+            return '\n"' + current_function + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
         # новая функция
         elif type(obj) == FuncDef:
             code = ''
