@@ -10,9 +10,7 @@ void execute(char *command) {
     if(stackptr < 0 || stackptr >= 100)
         exit(1);
     
-    // copying command to clean buf
-    for(int i = 0; i < sizeof(buf) && i < strlen(command); i++)
-        buf[i] = command[i];
+    memcpy(buf, command, strlen(command) + 1);
     
     // clear stackptr
     if(strlen(buf) == 0)
