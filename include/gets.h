@@ -14,7 +14,7 @@ char *gets(char *buf, int size) {
             printf(" \b\b█\b");
         }
     }
-    printf("\n");
+    printf(" \n");
     buf[i] = '\0';
     
     return buf;
