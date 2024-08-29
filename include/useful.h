@@ -3,22 +3,8 @@
 
 #define __useful_h   1
 
-#define true         1
-#define false        0
-typedef int bool;
+#include <misc.h>
 
-#define EOT          4   /* Ctrl+D */
-
-typedef long size_t;
-typedef void __thread1_t;
-
-#define NULL         ((void *) 0)
-
-#define putchar(c)   putc(c)
-#define getchar()    getc()
-
-#define EXIT_SUCCESS 0
-#define EXIT_FAILURE 1
 
 char *memset(char *buf, int c, size_t size) {
     char *p = buf;
