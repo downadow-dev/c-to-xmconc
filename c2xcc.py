@@ -408,7 +408,13 @@ def compile_obj(obj, root=False):
         elif type(obj) == Decl:
             code = ''
             if type(obj.type) == TypeDecl and type(obj.type.type) == Enum:
-                compile_obj(Decl(None, None, None, None, None, obj.type.type, None, None))
+                if obj.type.type.values != None:
+                    i = 0
+                    for item in obj.type.type.values.enumerators:
+                        if item.value != None:
+                            i = int(item.value.value)
+                        enumerators[item.name] = i
+                        i += 1
             code += create_var(obj.name)
             if obj.init != None:
                 code += compile_obj(Assignment('=', ID(obj.name), obj.init), root=True) + '\n'
