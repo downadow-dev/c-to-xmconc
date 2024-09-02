@@ -17,6 +17,9 @@ typedef void __thread1_t;
 #define putchar(c)   putc(c)
 #define getchar()    getc()
 
+#define thrd1_char   static char
+#define thrd1_int    static int
+
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
