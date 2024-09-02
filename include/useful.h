@@ -20,6 +20,14 @@ char *memcpy(char *dest, char *src, size_t n) {
     return dest;
 }
 
+char *strchr(char *s, int c) {
+    char *p = s;
+    
+    while(*p && *p != c) p++;
+    
+    return *p ? p : NULL;
+}
+
 int atoi(char *s) {
     char s2[8];
     memset(s2, '\0', sizeof(s2));
