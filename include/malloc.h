@@ -2,9 +2,15 @@
 
 #include "useful.h"
 
-#define MALLOC_BLK_SIZE      10000
-bool __malloc_mem_table[30] = {
-    false, false, false, false, false,    /* false = свободен, true = занят */
+#define MALLOC_BLK_SIZE      6000
+bool __malloc_mem_table[60] = {
+    false, false, false, false, false,   /* false = свободен, true = занят */
+    false, false, false, false, false,
+    false, false, false, false, false,
+    false, false, false, false, false,
+    false, false, false, false, false,
+    false, false, false, false, false,
+    false, false, false, false, false,
     false, false, false, false, false,
     false, false, false, false, false,
     false, false, false, false, false,
