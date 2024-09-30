@@ -540,7 +540,7 @@ def compile_obj(obj, root=False):
             for o in exprs:
                 code += compile_obj(o) + ' '
             code += ('@' if obj.name.name in functions else '') + obj.name.name
-            if obj.name.name in functions and root:
+            if (obj.name.name in functions or obj.name.name == 'memset' or obj.name.name == 'memcpy') and root:
                 code += ' drop'
             return code
         # инкремент и декремент
