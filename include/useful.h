@@ -5,13 +5,6 @@
 
 #include <misc.h>
 
-
-char *memcpy(char *dest, char *src, size_t n) {
-    for(int i = 0; i < n; i++)
-        dest[i] = src[i];
-    return dest;
-}
-
 char *strchr(char *s, int c) {
     char *p = s;
     
