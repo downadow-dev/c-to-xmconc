@@ -6,14 +6,6 @@
 #include <misc.h>
 
 
-char *memset(char *buf, int c, size_t size) {
-    char *p = buf;
-    while(size--)
-        *p++ = c;
-    return buf;
-}
-
-#define memmove memcpy
 char *memcpy(char *dest, char *src, size_t n) {
     for(int i = 0; i < n; i++)
         dest[i] = src[i];
