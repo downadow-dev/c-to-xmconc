@@ -666,6 +666,8 @@ def compile_obj(obj, root=False):
             return '~' + current_break + ' goto'
         elif type(obj) == BinaryOp:
             return compile_cond(obj)
+        elif type(obj) == UnaryOp:
+            return compile_cond(obj)
         elif type(obj) == EmptyStatement or type(obj) == Typedef:
             return ''
         else:
