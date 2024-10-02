@@ -5,13 +5,13 @@
 
 #define MALLOC_MEM    450000
 char __malloc_mem  [MALLOC_MEM];
-char __malloc_sizes[MALLOC_MEM];
+int  __malloc_sizes[MALLOC_MEM];
 
 bool __malloc_need_init = true;
 
 void __malloc_init(void) {
     /* инициализация данных */
-    memset(__malloc_sizes, '\0', MALLOC_MEM);
+    memset(__malloc_sizes, '\0', MALLOC_MEM * sizeof(int));
     
     __malloc_need_init = false;
 }
