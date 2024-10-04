@@ -358,7 +358,7 @@ def compile_obj(obj, root=False):
         # строка
         elif type(obj) == Constant and obj.type == 'string':
             current_string += 1
-            return '\n"' + preprocess_string(obj.value) + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
+            return '\n"' + preprocess_string(obj.value).replace('"', '`') + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
         # return
         elif type(obj) == Return:
             return (compile_obj(obj.expr) if obj.expr != None else '0') + ' ' + ('{return}' if current_function != 'main' else 'exit')
