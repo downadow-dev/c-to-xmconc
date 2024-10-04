@@ -298,8 +298,8 @@ def compile_obj(obj, root=False):
             
             return code
         # указатель на структуру
-        elif type(obj) == Decl and type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and type(obj.type.type.type) == Struct:
-            structures[obj.name] = obj.type.type.type.name
+        elif type(obj) == Decl and type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and (type(obj.type.type.type) == Struct or (type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedef_structs)):
+            structures[obj.name] = (obj.type.type.type.name if type(obj.type.type.type) == Struct else (obj.type.type.type.names[0] + '___STRUCT'))
             
             code = ''
             code += '/alloc ' + obj.name + '\n'
