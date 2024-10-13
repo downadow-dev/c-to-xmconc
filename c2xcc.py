@@ -54,7 +54,9 @@ def reset():
 
 # получить переменную/массив
 def get_var(name):
-    if current_function == '' or not (current_function + '.' + name) in variables:
+    if ('___F___' + name) in variables:
+        return '{___F___' + name + '}'
+    elif current_function == '' or not (current_function + '.' + name) in variables:
         return '{' + name + '}'
     else:
         return '{' + current_function + '.' + name + '}'
@@ -177,6 +179,16 @@ def compile_obj(obj, root=False):
         elif type(obj) == ID and obj.name == '__func__':
             current_string += 1
             return '\n"' + current_function + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
+        
+        elif type(obj) == Decl and type(obj.type) == PtrDecl and type(obj.type.type) == FuncDecl:
+            code = ''
+            code += '/alloc ___F___' + obj.name + '\n'
+            variables += ['___F___' + obj.name]
+            code += '~' + obj.name + '___end goto\n'
+            code += obj.name + ': {___F___' + obj.name + '}! goto\n'
+            code += obj.name + '___end:\n'
+            functions += [obj.name]
+            return code
         # новая функция
         elif type(obj) == FuncDef:
             code = ''
@@ -208,16 +220,8 @@ def compile_obj(obj, root=False):
                 
                 try:
                     for param in obj.decl.type.args.params:
-                        if type(param) == Decl and (type(param.type) == FuncDecl or (type(param.type) == PtrDecl and type(param.type.type) == FuncDecl)):
-                            code += '/alloc ___tmp___' + param.name + '\n'
-                            code += '{___tmp___' + param.name + '} =\n'
-                            code += '~' + param.name + '___end goto\n'
-                            code += param.name + ': {___tmp___' + param.name + '}! goto\n'
-                            code += param.name + '___end:\n'
-                            functions += [param.name]
-                        else:
-                            code += compile_obj(param) + '\n'
-                            code += get_var(param.name) + ' =\n'
+                        code += compile_obj(param) + '\n'
+                        code += get_var(param.name) + ' =\n'
                 except Exception:
                     print('', file=sys.stderr)
                 
@@ -311,9 +315,9 @@ def compile_obj(obj, root=False):
         elif type(obj) == ID and (obj.name in enumerators):
             return str(enumerators[obj.name])
         # вставить адрес функции
-        elif type(obj) == ID and (obj.name == 'main' or obj.name in functions):
+        elif type(obj) == ID and (obj.name == 'main' or obj.name in functions) and not ('___F___' + obj.name) in variables:
             return '~' + obj.name
-        elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and (obj.expr.name == 'main' or obj.expr.name in functions):
+        elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and (obj.expr.name == 'main' or obj.expr.name in functions) and not ('___F___' + obj.expr.name) in variables:
             return '~' + obj.expr.name
         # присваивание
         elif type(obj) == Assignment and obj.op == '=':
@@ -670,8 +674,8 @@ def compile_obj(obj, root=False):
             return ''
         else:
             return '# (unknown) #\n'
-    except Exception:
-        print('*** compile_obj() error', file=sys.stderr)
+    except Exception as e:
+        print('*** compile_obj() error (\n\t' + str(e) + '\n)', file=sys.stderr)
         return ''
 
 ################################################################################
