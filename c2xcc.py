@@ -467,6 +467,9 @@ def compile_obj(obj, root=False):
         # -выражение
         elif type(obj) == UnaryOp and obj.op == '-':
             return compile_obj(obj.expr) + ' neg'
+        # +выражение
+        elif type(obj) == UnaryOp and obj.op == '+':
+            return compile_obj(obj.expr)
         # ~выражение
         elif type(obj) == UnaryOp and obj.op == '~':
             return compile_obj(obj.expr) + ' neg --'
