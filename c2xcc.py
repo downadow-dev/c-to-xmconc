@@ -647,33 +647,38 @@ def compile_obj(obj, root=False):
             code = ''
             
             saved = current_switchl
-            current_break = '___endswitchl' + str(saved)
             current_switchl += 1
+            
+            i = 0
+            
+            code += '/alloc ___switchvar' + str(saved) + '\n'
+            code += compile_obj(obj.cond) + ' {___switchvar' + str(saved) + '} =\n'
             
             for item in obj.stmt.block_items:
                 if type(item) != Default:
-                    code += compile_obj(obj.cond) + ' ' + compile_obj(item.expr) + ' =? ~___switchl' + str(current_switchl) + ' then\n'
+                    code += '{___switchvar' + str(saved) + '} . ' + compile_obj(item.expr) + ' =? ~___switchl' + str(saved) + '_' + str(i) + ' then\n'
                 
-                current_switchl += 1
+                i += 1
             
-            current_switchl = saved + 1
+            i = 0
             
             for item in obj.stmt.block_items:
                 if type(item) == Default:
-                    code += '~___switchl' + str(current_switchl) + ' goto\n'
+                    code += '~___switchl' + str(saved) + '_' + str(i) + ' goto\n'
                 
-                current_switchl += 1
+                i += 1
             
             code += '~___endswitchl' + str(saved) + ' goto\n'
             
-            current_switchl = saved + 1
+            i = 0
             
             for item in obj.stmt.block_items:
-                code += '___switchl' + str(current_switchl) + ':\n'
+                code += '___switchl' + str(saved) + '_' + str(i) + ':\n'
                 for o in item.stmts:
+                    current_break = '___endswitchl' + str(saved)
                     code += '\t' + compile_obj(o, root=True) + '\n'
                 
-                current_switchl += 1
+                i += 1
             
             code += '___endswitchl' + str(saved) + ':\n'
             
