@@ -647,23 +647,35 @@ def compile_obj(obj, root=False):
             code = ''
             
             saved = current_switchl
-            current_break = '___endcase' + str(saved)
+            current_break = '___endswitchl' + str(saved)
             current_switchl += 1
             
             for item in obj.stmt.block_items:
                 if type(item) != Default:
-                    code += compile_obj(obj.cond) + ' ' + compile_obj(item.expr) + ' =?'
-                    code += ' ~___switchl' + str(current_switchl) + ' else ' + (';' if current_function == 'main' else '') + '\n'
-                
-                for o in item.stmts:
-                    current_break = '___endcase' + str(saved)
-                    code += '\t' + compile_obj(o, root=True) + '\n'
-                
-                code += '___switchl' + str(current_switchl) + ': ' + (';' if current_function == 'main' else '') + '\n'
+                    code += compile_obj(obj.cond) + ' ' + compile_obj(item.expr) + ' =? ~___switchl' + str(current_switchl) + ' then\n'
                 
                 current_switchl += 1
-            code += '___switchl' + str(current_switchl - 1) + ':\n'
-            code += '___endcase' + str(saved) + ':\n'
+            
+            current_switchl = saved + 1
+            
+            for item in obj.stmt.block_items:
+                if type(item) == Default:
+                    code += '~___switchl' + str(current_switchl) + ' goto\n'
+                
+                current_switchl += 1
+            
+            code += '~___endswitchl' + str(saved) + ' goto\n'
+            
+            current_switchl = saved + 1
+            
+            for item in obj.stmt.block_items:
+                code += '___switchl' + str(current_switchl) + ':\n'
+                for o in item.stmts:
+                    code += '\t' + compile_obj(o, root=True) + '\n'
+                
+                current_switchl += 1
+            
+            code += '___endswitchl' + str(saved) + ':\n'
             
             return code
         ####################
