@@ -430,11 +430,12 @@ def compile_obj(obj, root=False):
         elif type(obj) == TernaryOp:
             code = ''
             
-            code += compile_cond(obj.cond) + ' ~___tElse' + str(current_if) + ' else '
-            code += compile_obj(obj.iftrue) + ' ~___tEndif' + str(current_if) + ' goto ___tElse' + str(current_if) + ': '
-            code += compile_obj(obj.iffalse) + ' ___tEndif' + str(current_if) + ':'
-            
+            saved = current_if
             current_if += 1
+            
+            code += compile_cond(obj.cond) + ' ~___tElse' + str(saved) + ' else '
+            code += compile_obj(obj.iftrue) + ' ~___tEndif' + str(saved) + ' goto ___tElse' + str(saved) + ': '
+            code += compile_obj(obj.iffalse) + ' ___tEndif' + str(saved) + ':'
             
             return code
         # число
