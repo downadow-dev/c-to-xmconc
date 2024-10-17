@@ -223,7 +223,7 @@ def compile_obj(obj, root=False):
                         code += compile_obj(param) + '\n'
                         code += get_var(param.name) + ' =\n'
                 except Exception:
-                    print('', file=sys.stderr)
+                    print('', file=sys.stderr, end='')
                 
                 if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
                     code += '~' + obj.decl.name + '.___start create_thrd1 0 {return} ' + obj.decl.name + '.___start: thrd_1\n'
