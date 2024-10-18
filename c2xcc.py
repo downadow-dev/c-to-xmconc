@@ -22,8 +22,11 @@ current_break = ''
 enumerators = {}
 structs = {}
 structures = {}
+unions = {}
+unionlist = {}
 
 typedef_structs = []
+typedef_unions = []
 
 def reset():
     global variables
@@ -52,8 +55,14 @@ def reset():
     structures = {}
     global structs
     structs = {}
+    global unionlist
+    unionlist = {}
+    global unions
+    unions = {}
     global typedef_structs
     typedef_structs = []
+    global typedef_unions
+    typedef_unions = []
     global current_continue
     current_continue = ''
     global current_break
@@ -175,7 +184,10 @@ def compile_obj(obj, root=False):
     global enumerators
     global structs
     global structures
+    global unions
+    global unionlist
     global typedef_structs
+    global typedef_unions
     global current_continue
     global current_break
     
@@ -288,6 +300,11 @@ def compile_obj(obj, root=False):
             structs[obj.type.name] = obj.type.decls
             
             return ''
+        # union
+        elif type(obj) == Decl and type(obj.type) == Union:
+            unions[obj.type.name] = obj.type.decls
+            
+            return ''
         #########################
         elif (type(obj) == Typedef) and type(obj.type) == TypeDecl and type(obj.type.type) == Enum:
             compile_obj(Decl(None, None, None, None, None, obj.type.type, None, None))
@@ -307,6 +324,23 @@ def compile_obj(obj, root=False):
             else:
                 structs[obj.name + '___STRUCT'] = structs[obj.type.type.type.name]
             typedef_structs += [obj.name]
+            
+            return ''
+        # typedef union ... name
+        elif (type(obj) == Typedef) and type(obj.type) == TypeDecl and type(obj.type.type) == Union:
+            if obj.type.type.decls != None:
+                unions[obj.name + '___UNION'] = obj.type.type.decls
+            else:
+                unions[obj.name + '___UNION'] = unions[obj.type.type.name]
+            typedef_unions += [obj.name]
+            
+            return ''
+        elif (type(obj) == Typedef) and type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and type(obj.type.type.type) == Union:
+            if obj.type.type.type.decls != None:
+                unions[obj.name + '___UNION'] = obj.type.type.type.decls
+            else:
+                unions[obj.name + '___UNION'] = unions[obj.type.type.type.name]
+            typedef_unions += [obj.name]
             
             return ''
         # структура
@@ -338,9 +372,29 @@ def compile_obj(obj, root=False):
                     code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
             
             return code
+        # объединение
+        elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == IdentifierType and obj.type.type.names[0] in typedef_unions:
+            name = obj.type.type.names[0] + '___UNION'
+            unionlist[obj.name] = name
+            return '/alloc ' + obj.name + '\n'
+        elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Union:
+            name = (obj.type.type.name if obj.type.type.name != None else obj.name + '__UNION')
+            unionlist[obj.name] = name
+            if obj.type.type.name == None:
+                unions[name] = obj.type.type.decls
         # указатель на структуру
         elif type(obj) == Decl and type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and (type(obj.type.type.type) == Struct or (type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedef_structs)):
             structures[obj.name] = (obj.type.type.type.name if type(obj.type.type.type) == Struct else (obj.type.type.type.names[0] + '___STRUCT'))
+            
+            code = ''
+            code += '/alloc ' + obj.name + '\n'
+            if obj.init != None:
+                code += compile_obj(obj.init) + ' {' + obj.name + '} =\n' 
+            
+            return code
+        # указатель на объединение
+        elif type(obj) == Decl and type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and (type(obj.type.type.type) == Union or (type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedef_unions)):
+            unionlist[obj.name] = (obj.type.type.type.name if type(obj.type.type.type) == Union else (obj.type.type.type.names[0] + '___UNION'))
             
             code = ''
             code += '/alloc ' + obj.name + '\n'
@@ -530,7 +584,11 @@ def compile_obj(obj, root=False):
         # ~выражение
         elif type(obj) == UnaryOp and obj.op == '~':
             return compile_obj(obj.expr) + ' neg --'
-        # поле структуры
+        # поле объединения/структуры
+        elif type(obj) == StructRef and obj.type == '.' and obj.name.name in unionlist:
+            return '{' + obj.name.name + '} .'
+        elif type(obj) == StructRef and obj.type == '->' and obj.name.name in unionlist:
+            return '{' + obj.name.name + '}'
         elif type(obj) == StructRef and obj.type == '.':
             i = 0
             while structs[structures[obj.name.name]][i].name != obj.field.name:
