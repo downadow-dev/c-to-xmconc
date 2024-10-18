@@ -74,6 +74,10 @@ def create_var(name, array_len=0):
 
 # преобразовать '\'-последовательности в строке
 def preprocess_string(s):
+    # пропустить префиксы вроде L
+    while not s.startswith('"') and not s.startswith("'"):
+        s = s[1:]
+    
     return s[1:-1].replace('\\\\', '%/\\\\/%')  \
         .replace('\\"', '"')                    \
         .replace('\\\'', '\'')                  \
@@ -493,15 +497,29 @@ def compile_obj(obj, root=False):
             return '___L' + current_function + '___' + obj.name + ':\n' + compile_obj(obj.stmt)
         elif type(obj) == Goto:
             return '~___L' + current_function + '___' + obj.name + ' goto'
-        elif type(obj) == FuncCall and obj.name.name == '__jump':
+        elif type(obj) == FuncCall and obj.name.name == '__jump' and not obj.name.name in functions:
             return compile_obj(obj.args.exprs[0]) + ' goto'
         ###################################
-        elif type(obj) == FuncCall and obj.name.name == '__extern_label':
+        elif type(obj) == FuncCall and obj.name.name == '__extern_label' and not obj.name.name in functions:
             return '<' + obj.args.exprs[0].value[1:-1] + '>'
-        elif type(obj) == FuncCall and obj.name.name == 'pow':
+        
+        elif type(obj) == FuncCall and obj.name.name == '_call' and not obj.name.name in functions:
+            code = ''
+            exprs = []
+            if obj.args != None:
+                exprs += obj.args.exprs[1:]
+            if obj.name.name in functions:
+                exprs.reverse()
+            for o in exprs:
+                code += compile_obj(o) + ' '
+            code += preprocess_string(obj.args.exprs[0].value)
+            return code
+        
+        # pow
+        elif type(obj) == FuncCall and obj.name.name == 'pow' and not obj.name.name in functions:
             return compile_obj(obj.args.exprs[0]) + ' ' + compile_obj(obj.args.exprs[1]) + ' **'
         # printf
-        elif type(obj) == FuncCall and obj.name.name == 'printf':
+        elif type(obj) == FuncCall and obj.name.name == 'printf' and not obj.name.name in functions:
             s_format = preprocess_string(obj.args.exprs[0].value)
             etc = []
             etc += obj.args.exprs[1:]
