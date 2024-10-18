@@ -387,7 +387,19 @@ def compile_obj(obj, root=False):
         # строка
         elif type(obj) == Constant and obj.type == 'string':
             current_string += 1
-            return '\n"' + preprocess_string(obj.value).replace('"', '`') + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
+            s = preprocess_string(obj.value)
+            # для строк, содержащих '\n', '\b' и др.
+            for c in s:
+                if ord(c) < 32 or ord(c) >= 127:
+                    code = '\n'
+                    code += '/alloc ___s' + str(current_string) + '[' + str(len(s)+1) + ']\n'
+                    i = 0
+                    for ch in s:
+                        code += str(ord(ch)) + ' ({___s' + str(current_string) + '} ' + str(i) + ' +) =\n'
+                        i += 1
+                    code += '0 ({___s' + str(current_string) + '} ' + str(i) + ' +) =\n'
+                    code += '{___s' + str(current_string) + '}'
+                    return code
         # return
         elif type(obj) == Return:
             return (compile_obj(obj.expr) if obj.expr != None else '0') + ' ' + ('{return}' if current_function != 'main' else 'exit')
