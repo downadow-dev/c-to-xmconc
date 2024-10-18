@@ -102,7 +102,6 @@ def preprocess_string(s):
 # код в начале программы
 def get_init_code():
     return '''
-/alloc ___vargs[126]
 /alloc ___ret[64]
 /alloc __retptr
 0 {__retptr} =
@@ -144,7 +143,11 @@ def compile_cond(op):
 
 
 def static_int(obj):
-    if type(obj) == Constant and obj.type == 'int':
+    if type(obj) == Constant and obj.type == 'int' and obj.value.startswith('0x'):
+        return int(obj.value[2:], base=16)
+    elif type(obj) == Constant and obj.type == 'int' and obj.value.startswith('0'):
+        return int(obj.value[1:], base=8)
+    elif type(obj) == Constant and obj.type == 'int':
         return int(obj.value)
     elif type(obj) == BinaryOp and obj.op == '+':
         return static_int(obj.left) + static_int(obj.right)
@@ -239,6 +242,7 @@ def compile_obj(obj, root=False):
                     for param in obj.decl.type.args.params:
                         if type(param) == EllipsisParam:
                             funcfixed[obj.decl.name] = i
+                            code += create_var('___vargs', 126)
                             break
                         code += compile_obj(param) + '\n'
                         code += get_var(param.name) + ' =\n'
@@ -432,9 +436,11 @@ def compile_obj(obj, root=False):
               (len(obj.init.exprs) if type(obj.init) == InitList else len(preprocess_string(obj.init.value)) + 1))) \
                 + create_var(obj.name) \
                 + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' =\n'
+            
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
                     code += compile_obj(obj.init.exprs[i]) + ' (' + get_var(obj.name + '__ARRAY__') + ' ' + str(i) + ' +) =\n'
+            
             elif obj.init != None and type(obj.init) == Constant:
                 for i in range(len(preprocess_string(obj.init.value))):
                     code += str(ord(preprocess_string(obj.init.value)[i])) + ' (' + get_var(obj.name + '__ARRAY__') + ' ' + str(i) + ' +) =\n'
@@ -617,7 +623,7 @@ def compile_obj(obj, root=False):
                 code += compile_obj(o) + '\n'
             i = 0
             for o in vargs:
-                code += compile_obj(o) + ' ({___vargs} ' + str(i) + ' +) =\n'
+                code += compile_obj(o) + ' ({' + obj.name.name + '.___vargs} ' + str(i) + ' +) =\n'
                 i += 1
             code += ('@' if obj.name.name in functions else '') + obj.name.name
             if (obj.name.name in functions or obj.name.name == 'memset' or obj.name.name == 'memcpy' or obj.name.name == 'getc') and root:
