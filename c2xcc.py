@@ -9,6 +9,8 @@ current_function = ''   # мы находимся в теле этой функ�
 variables = []          # переменные
 functions = []          # функции
 
+funccode = {}
+
 current_if = 0
 current_for = 0
 current_while = 0
@@ -27,6 +29,8 @@ def reset():
     variables = []
     global functions
     functions = []
+    global funccode
+    funccode = {}
     global current_function
     current_function = ''
     global current_string
@@ -156,6 +160,7 @@ def compile_obj(obj, root=False):
     global current_function
     global variables
     global functions
+    global funccode
     global current_if
     global current_while
     global current_for
@@ -213,6 +218,9 @@ def compile_obj(obj, root=False):
                     code += '/alloc ' + obj.decl.type.args.params[1].name + '\n'
                     code += '{' + obj.decl.type.args.params[1].name + '}' \
                         + ' @___get_args {' + obj.decl.type.args.params[0].name + '} =\n'
+                    if '___get_args' in funccode:
+                        code += funccode['___get_args']
+                        del funccode['___get_args']
             else:
                 code += '~' + obj.decl.name + '___END goto\n'
                 
@@ -247,7 +255,11 @@ def compile_obj(obj, root=False):
             
             current_function = ''
             
-            return code
+            if obj.decl.name == 'main':
+                return code
+            else:
+                funccode[obj.decl.name] = code
+                return ''
         # новый enum
         elif type(obj) == Decl and type(obj.type) == Enum:
             if obj.type.values != None:
@@ -558,6 +570,11 @@ def compile_obj(obj, root=False):
         # вызов функции
         elif type(obj) == FuncCall:
             code = ''
+            
+            if obj.name.name in funccode:
+                code += funccode[obj.name.name]
+                del funccode[obj.name.name]
+            
             exprs = []
             if obj.args != None:
                 exprs += obj.args.exprs
