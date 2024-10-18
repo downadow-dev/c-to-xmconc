@@ -10,6 +10,7 @@ variables = []          # переменные
 functions = []          # функции
 
 funccode = {}
+funcfixed = {}
 
 current_if = 0
 current_for = 0
@@ -31,6 +32,8 @@ def reset():
     functions = []
     global funccode
     funccode = {}
+    global funcfixed
+    funcfixed = {}
     global current_function
     current_function = ''
     global current_string
@@ -99,6 +102,7 @@ def preprocess_string(s):
 # код в начале программы
 def get_init_code():
     return '''
+/alloc ___vargs[126]
 /alloc ___ret[64]
 /alloc __retptr
 0 {__retptr} =
@@ -173,7 +177,7 @@ def compile_obj(obj, root=False):
     global current_break
     
     try:
-        if obj == None or (type(obj) == Decl and 'extern' in obj.storage):
+        if obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
             return ''
         elif type(obj) == Compound:
             code = ''
@@ -231,9 +235,14 @@ def compile_obj(obj, root=False):
                 code += obj.decl.name + ': {function}\n'
                 
                 try:
+                    i = 0
                     for param in obj.decl.type.args.params:
+                        if type(param) == EllipsisParam:
+                            funcfixed[obj.decl.name] = i
+                            break
                         code += compile_obj(param) + '\n'
                         code += get_var(param.name) + ' =\n'
+                        i += 1
                 except Exception:
                     print('', file=sys.stderr, end='')
                 
@@ -514,7 +523,6 @@ def compile_obj(obj, root=False):
         ###################################
         elif type(obj) == FuncCall and obj.name.name == '__extern_label' and not obj.name.name in functions:
             return '<' + obj.args.exprs[0].value[1:-1] + '>'
-        
         elif type(obj) == FuncCall and obj.name.name == '_call' and not obj.name.name in functions:
             code = ''
             exprs = []
@@ -526,10 +534,6 @@ def compile_obj(obj, root=False):
                 code += compile_obj(o) + ' '
             code += preprocess_string(obj.args.exprs[0].value)
             return code
-        
-        # pow
-        elif type(obj) == FuncCall and obj.name.name == 'pow' and not obj.name.name in functions:
-            return compile_obj(obj.args.exprs[0]) + ' ' + compile_obj(obj.args.exprs[1]) + ' **'
         # printf
         elif type(obj) == FuncCall and obj.name.name == 'printf' and not obj.name.name in functions:
             s_format = preprocess_string(obj.args.exprs[0].value)
@@ -576,14 +580,22 @@ def compile_obj(obj, root=False):
                 del funccode[obj.name.name]
             
             exprs = []
+            vargs = []
             if obj.args != None:
                 exprs += obj.args.exprs
             if obj.name.name in functions:
+                if obj.name.name in funcfixed:
+                    vargs += exprs[funcfixed[obj.name.name]:]
+                    exprs = exprs[:funcfixed[obj.name.name]]
                 exprs.reverse()
             for o in exprs:
-                code += compile_obj(o) + ' '
+                code += compile_obj(o) + '\n'
+            i = 0
+            for o in vargs:
+                code += compile_obj(o) + ' ({___vargs} ' + str(i) + ' +) =\n'
+                i += 1
             code += ('@' if obj.name.name in functions else '') + obj.name.name
-            if (obj.name.name in functions or obj.name.name == 'memset' or obj.name.name == 'memcpy') and root:
+            if (obj.name.name in functions or obj.name.name == 'memset' or obj.name.name == 'memcpy' or obj.name.name == 'getc') and root:
                 code += ' drop'
             return code
         # инкремент и декремент
