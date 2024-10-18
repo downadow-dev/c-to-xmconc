@@ -352,9 +352,20 @@ def compile_obj(obj, root=False):
             code = ''
             code += '/alloc ' + obj.name + '[' + str(len(structs[name])) + ']\n'
             
+            i = 0
+            for decl in structs[name]:
+                if type(decl.type) == ArrayDecl:
+                    code += '/alloc _Array' + str(i) + '___' + name + '[' + str(static_int(decl.type.dim)) + ']\n'
+                    code += '{_Array' + str(i) + '___' + name + '} ({' + obj.name + '} ' + str(i) + ' +) =\n'
+                i += 1
+            
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
-                    code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
+                    if type(structs[name][i].type) == ArrayDecl:
+                        for j in range(len(obj.init.exprs[i].exprs)):
+                            code += compile_obj(obj.init.exprs[i].exprs[j]) + ' ((({' + obj.name + '} ' + str(i) + ' +) .) '+str(j)+' +) =\n'
+                    else:
+                        code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
             
             return code
         elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
@@ -367,9 +378,20 @@ def compile_obj(obj, root=False):
             code = ''
             code += '/alloc ' + obj.name + '[' + str(len(structs[name])) + ']\n'
             
+            i = 0
+            for decl in structs[name]:
+                if type(decl.type) == ArrayDecl:
+                    code += '/alloc _Array' + str(i) + '___' + name + '[' + str(static_int(decl.type.dim)) + ']\n'
+                    code += '{_Array' + str(i) + '___' + name + '} ({' + obj.name + '} ' + str(i) + ' +) =\n'
+                i += 1
+            
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
-                    code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
+                    if type(structs[name][i].type) == ArrayDecl:
+                        for j in range(len(obj.init.exprs[i].exprs)):
+                            code += compile_obj(obj.init.exprs[i].exprs[j]) + ' ((({' + obj.name + '} ' + str(i) + ' +) .) '+str(j)+' +) =\n'
+                    else:
+                        code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
             
             return code
         # объединение
