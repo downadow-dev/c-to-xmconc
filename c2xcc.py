@@ -244,7 +244,7 @@ def compile_obj(obj, root=False):
                         code += get_var(param.name) + ' =\n'
                         i += 1
                 except Exception:
-                    print('', file=sys.stderr, end='')
+                    ''
                 
                 if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
                     code += '~' + obj.decl.name + '.___start create_thrd1 0 {return} ' + obj.decl.name + '.___start: thrd_1\n'
@@ -281,7 +281,7 @@ def compile_obj(obj, root=False):
             return ''
         # struct
         elif type(obj) == Decl and type(obj.type) == Struct:
-            structs[obj.type.name] = obj.type.decls;
+            structs[obj.type.name] = obj.type.decls
             
             return ''
         #########################
@@ -294,6 +294,14 @@ def compile_obj(obj, root=False):
                 structs[obj.name + '___STRUCT'] = obj.type.type.decls
             else:
                 structs[obj.name + '___STRUCT'] = structs[obj.type.type.name]
+            typedef_structs += [obj.name]
+            
+            return ''
+        elif (type(obj) == Typedef) and type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and type(obj.type.type.type) == Struct:
+            if obj.type.type.type.decls != None:
+                structs[obj.name + '___STRUCT'] = obj.type.type.type.decls
+            else:
+                structs[obj.name + '___STRUCT'] = structs[obj.type.type.type.name]
             typedef_structs += [obj.name]
             
             return ''
@@ -400,12 +408,18 @@ def compile_obj(obj, root=False):
                     code += '0 ({___s' + str(current_string) + '} ' + str(i) + ' +) =\n'
                     code += '{___s' + str(current_string) + '}'
                     return code
+            return '\n"' + s.replace('"', '`') + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
         # return
         elif type(obj) == Return:
             return (compile_obj(obj.expr) if obj.expr != None else '0') + ' ' + ('{return}' if current_function != 'main' else 'exit')
         # FuncDecl
-        elif type(obj) == Decl and type(obj.type) == FuncDecl and current_function == '':
+        elif type(obj) == Decl and type(obj.type) == FuncDecl:
             functions += [obj.name]
+            try:
+                if type(obj.type.args.params[-1]) == EllipsisParam:
+                    funcfixed[obj.name] = len(obj.type.args.params) - 1
+            except Exception:
+                ''
             return ''
         # создание переменной/массива
         elif type(obj) == DeclList:
@@ -462,7 +476,7 @@ def compile_obj(obj, root=False):
         ######################################################
         elif type(obj) == Cast:
             return compile_obj(obj.expr)
-        # (a == b ? c : d) и др.
+        # тернарный оператор
         elif type(obj) == TernaryOp:
             code = ''
             
