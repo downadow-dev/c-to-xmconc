@@ -12,6 +12,7 @@ functions = []          # функции
 funccode = {}
 funcfixed = {}
 
+continuel = 0
 current_if = 0
 current_for = 0
 current_while = 0
@@ -29,6 +30,8 @@ typedef_structs = []
 typedef_unions = []
 
 def reset():
+    global continuel
+    continuel = 0
     global variables
     variables = []
     global functions
@@ -172,6 +175,7 @@ def static_int(obj):
 current_string = -1
 # компиляция числа, переменной и т. д.
 def compile_obj(obj, root=False):
+    global continuel
     global current_string
     global current_function
     global variables
@@ -192,6 +196,12 @@ def compile_obj(obj, root=False):
     global current_break
     
     try:
+        if type(obj) == ID and obj.name in funccode:
+            code = ''
+            code += funccode[obj.name]
+            del funccode[obj.name]
+            return code + '\n~' + obj.name
+        
         if obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
             return ''
         elif type(obj) == Compound:
@@ -207,16 +217,6 @@ def compile_obj(obj, root=False):
         elif type(obj) == ID and obj.name == '__func__':
             current_string += 1
             return '\n"' + current_function + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
-        
-        elif type(obj) == Decl and type(obj.type) == PtrDecl and type(obj.type.type) == FuncDecl:
-            code = ''
-            code += '/alloc ___F___' + obj.name + '\n'
-            variables += ['___F___' + obj.name]
-            code += '~' + obj.name + '___end goto\n'
-            code += obj.name + ': {___F___' + obj.name + '}! goto\n'
-            code += obj.name + '___end:\n'
-            functions += [obj.name]
-            return code
         # новая функция
         elif type(obj) == FuncDef:
             code = ''
@@ -683,6 +683,21 @@ def compile_obj(obj, root=False):
                 i += 1
             return code
         # вызов функции
+        elif type(obj) == FuncCall and (obj.name.name in variables or (current_function + '.' + obj.name.name) in variables):
+            code = ''
+            
+            exprs = []
+            if obj.args != None:
+                exprs += obj.args.exprs
+            exprs.reverse()
+            
+            for o in exprs:
+                code += compile_obj(o) + '\n'
+            
+            code += '~____C' + str(continuel) + ' ' + get_var(obj.name.name) + ' . goto ____C' + str(continuel) + ':\n'
+            continuel += 1
+            
+            return code
         elif type(obj) == FuncCall:
             code = ''
             
