@@ -196,12 +196,6 @@ def compile_obj(obj, root=False):
     global current_break
     
     try:
-        if type(obj) == ID and obj.name in funccode:
-            code = ''
-            code += funccode[obj.name]
-            del funccode[obj.name]
-            return code + '\n~' + obj.name
-        
         if obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
             return ''
         elif type(obj) == Compound:
@@ -429,9 +423,17 @@ def compile_obj(obj, root=False):
             return str(enumerators[obj.name])
         # вставить адрес функции
         elif type(obj) == ID and (obj.name == 'main' or obj.name in functions) and not ('___F___' + obj.name) in variables:
-            return '~' + obj.name
+            code = ''
+            if obj.name in funccode:
+                code += funccode[obj.name]
+                del funccode[obj.name]
+            return code + '\n~' + obj.name
         elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and (obj.expr.name == 'main' or obj.expr.name in functions) and not ('___F___' + obj.expr.name) in variables:
-            return '~' + obj.expr.name
+            code = ''
+            if obj.expr.name in funccode:
+                code += funccode[obj.expr.name]
+                del funccode[obj.expr.name]
+            return code + '\n~' + obj.expr.name
         # присваивание
         elif type(obj) == Assignment and obj.op == '=':
             return compile_obj(obj.rvalue) + ' ' + compile_obj(obj.lvalue)[:-2] + ' = ' + (compile_obj(obj.lvalue) if not root else '')
@@ -629,6 +631,22 @@ def compile_obj(obj, root=False):
             while structs[structures[obj.name.name]][i].name != obj.field.name:
                 i += 1
             return '{' + obj.name.name + '}! ' + ((str(i) + ' + ') if i != 0 else '') + '.'
+        # вызов функции (1)
+        elif type(obj) == FuncCall and (type(obj.name) != ID or (obj.name.name in variables or (current_function + '.' + obj.name.name) in variables)):
+            code = ''
+            
+            exprs = []
+            if obj.args != None:
+                exprs += obj.args.exprs
+            exprs.reverse()
+            
+            for o in exprs:
+                code += compile_obj(o) + '\n'
+            
+            code += '~____C' + str(continuel) + ' ' + compile_obj(obj.name) + ' goto ____C' + str(continuel) + ':\n'
+            continuel += 1
+            
+            return code
         # переменная
         elif type(obj) == ID:
             return get_var(obj.name) + ' .'
@@ -690,22 +708,7 @@ def compile_obj(obj, root=False):
                 
                 i += 1
             return code
-        # вызов функции
-        elif type(obj) == FuncCall and (obj.name.name in variables or (current_function + '.' + obj.name.name) in variables):
-            code = ''
-            
-            exprs = []
-            if obj.args != None:
-                exprs += obj.args.exprs
-            exprs.reverse()
-            
-            for o in exprs:
-                code += compile_obj(o) + '\n'
-            
-            code += '~____C' + str(continuel) + ' ' + get_var(obj.name.name) + ' . goto ____C' + str(continuel) + ':\n'
-            continuel += 1
-            
-            return code
+        # вызов функции (2)
         elif type(obj) == FuncCall:
             code = ''
             
