@@ -595,6 +595,13 @@ def compile_obj(obj, root=False):
         type(obj.expr.type) == TypeDecl and type(obj.expr.type.type) == IdentifierType and \
         obj.expr.type.type.names[0] in typedef_structs:
             return str(len(structs[obj.expr.type.type.names[0] + '___STRUCT']))
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == StructRef:
+            for decl in structs[structures[obj.expr.name.name]]:
+                if decl.name == obj.expr.field.name:
+                    if type(decl.type) == ArrayDecl:
+                        return str(static_int(decl.type.dim))
+                    else:
+                        return '1'
         elif type(obj) == UnaryOp and obj.op == 'sizeof':
             return '1'
         # -выражение
