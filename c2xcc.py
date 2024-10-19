@@ -602,6 +602,7 @@ def compile_obj(obj, root=False):
                         return str(static_int(decl.type.dim))
                     else:
                         return '1'
+            return '0'
         elif type(obj) == UnaryOp and obj.op == 'sizeof':
             return '1'
         # -выражение
