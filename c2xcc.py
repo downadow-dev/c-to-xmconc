@@ -168,6 +168,8 @@ def static_int(obj):
         return static_int(obj.left) / static_int(obj.right)
     elif type(obj) == BinaryOp and obj.op == '%':
         return static_int(obj.left) % static_int(obj.right)
+    elif type(obj) == UnaryOp and obj.op == 'sizeof':
+        return 1
 
 current_string = -1
 # компиляция числа, переменной и т. д.
