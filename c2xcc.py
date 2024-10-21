@@ -9,7 +9,6 @@ current_function = ''   # мы находимся в теле этой функ�
 variables = []          # переменные
 functions = []          # функции
 
-funccode = {}
 funcfixed = {}
 
 continuel = 0
@@ -36,8 +35,6 @@ def reset():
     variables = []
     global functions
     functions = []
-    global funccode
-    funccode = {}
     global funcfixed
     funcfixed = {}
     global current_function
@@ -180,7 +177,6 @@ def compile_obj(obj, root=False):
     global current_function
     global variables
     global functions
-    global funccode
     global current_if
     global current_while
     global current_for
@@ -231,9 +227,6 @@ def compile_obj(obj, root=False):
                     code += '/alloc ' + obj.decl.type.args.params[1].name + '\n'
                     code += '{' + obj.decl.type.args.params[1].name + '}' \
                         + ' @___get_args {' + obj.decl.type.args.params[0].name + '} =\n'
-                    if '___get_args' in funccode:
-                        code += funccode['___get_args']
-                        del funccode['___get_args']
             else:
                 code += '~' + obj.decl.name + '___END goto\n'
                 
@@ -274,11 +267,7 @@ def compile_obj(obj, root=False):
             
             current_function = ''
             
-            if obj.decl.name == 'main':
-                return code
-            else:
-                funccode[obj.decl.name] = code
-                return ''
+            return code
         # новый enum
         elif type(obj) == Decl and type(obj.type) == Enum:
             if obj.type.values != None:
@@ -424,15 +413,9 @@ def compile_obj(obj, root=False):
         # вставить адрес функции
         elif type(obj) == ID and (obj.name == 'main' or obj.name in functions) and not ('___F___' + obj.name) in variables:
             code = ''
-            if obj.name in funccode:
-                code += funccode[obj.name]
-                del funccode[obj.name]
             return code + '\n~' + obj.name
         elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and (obj.expr.name == 'main' or obj.expr.name in functions) and not ('___F___' + obj.expr.name) in variables:
             code = ''
-            if obj.expr.name in funccode:
-                code += funccode[obj.expr.name]
-                del funccode[obj.expr.name]
             return code + '\n~' + obj.expr.name
         # присваивание
         elif type(obj) == Assignment and obj.op == '=':
@@ -711,10 +694,6 @@ def compile_obj(obj, root=False):
         # вызов функции (2)
         elif type(obj) == FuncCall:
             code = ''
-            
-            if obj.name.name in funccode:
-                code += funccode[obj.name.name]
-                del funccode[obj.name.name]
             
             exprs = []
             vargs = []
