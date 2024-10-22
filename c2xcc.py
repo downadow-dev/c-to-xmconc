@@ -540,7 +540,8 @@ def compile_obj(obj, root=False):
                         enumerators[item.name] = i
                         i += 1
             code += create_var(obj.name)
-            code += (compile_obj(obj.init) if obj.init != None else '0') + ' ' + get_var(obj.name) + ' =\n'
+            if current_function == '':
+                code += (compile_obj(obj.init) if obj.init != None else '0') + ' ' + get_var(obj.name) + ' =\n'
             return code
         ######################################################
         elif type(obj) == Cast:
