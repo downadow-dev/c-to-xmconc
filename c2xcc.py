@@ -875,7 +875,7 @@ if __name__ == '__main__':
         print('usage: ./c2xcc.py FILE ["CPP_ARGS"] [> OUT_FILE]')
         sys.exit(1)
     
-    cppargs = ['-D__XCC_C__=1']
+    cppargs = ['-undef', '-D__XCC_C__=1']
     if len(sys.argv) > 2:
         cppargs += sys.argv[2].split(' ')
     ast = parse_file(sys.argv[1], use_cpp=True, cpp_args=cppargs)
