@@ -61,6 +61,7 @@ char *memmove(char *dst, char *src, size_t n) {
     
     for(int i = n-1; i >= 0; i--)
         dst[i] = src[i];
+    return dst;
 }
 
 int strcmp(char *s1, char *s2) {
