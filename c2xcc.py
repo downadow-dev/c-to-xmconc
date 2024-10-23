@@ -204,7 +204,7 @@ def compile_obj(obj, root=False):
         elif type(obj) == ExprList:
             code = ''
             for item in obj.exprs:
-                code += compile_obj(item) + '\n'
+                code += compile_obj(item, root=True) + '\n'
             return code
         elif type(obj) == ID and obj.name == '__func__':
             current_string += 1
@@ -540,7 +540,7 @@ def compile_obj(obj, root=False):
                         enumerators[item.name] = i
                         i += 1
             code += create_var(obj.name)
-            if current_function == '':
+            if current_function == '' or obj.init != None:
                 code += (compile_obj(obj.init) if obj.init != None else '0') + ' ' + get_var(obj.name) + ' =\n'
             return code
         ######################################################
