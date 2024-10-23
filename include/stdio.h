@@ -46,7 +46,7 @@ int vprintf(char *fmt, va_list ap) {
         if(*fmt == '%') {
             fmt++;
             
-            while(*fmt == 'l' || *fmt == 'h' || *fmt == 't' || *fmt == 'z' || *fmt == 'j')
+            while(*fmt == 'l' || *fmt == 'h' || *fmt == 't' || *fmt == 'z' || *fmt == 'j' || *fmt == ' ')
                 fmt++;
             
             switch(*fmt) {
