@@ -119,6 +119,10 @@ char *strcpy(char *dst, char *src) {
     return memcpy(dst, src, strlen(src) + 1);
 }
 
+char *stpcpy(char *dst, char *src) {
+    return mempcpy(dst, src, strlen(src) + 1) - 1;
+}
+
 char *strcat(char *dst, char *src) {
     memcpy(dst + strlen(dst), src, strlen(src) + 1);
     return dst;

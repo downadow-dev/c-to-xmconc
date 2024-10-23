@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define EOF          (-1)
 
@@ -28,19 +29,24 @@ int putchar(int c) {
     return c;
 }
 
-void _printi(int v, int base, int upper) {
+/* print a number */
+
+char *_sprinti(int v, char *start, int base, int upper) {
     if(v < 0) {
         v = -v;
-        putchar('-');
+        *start++ = '-';
     }
     
-    if(v / base) _printi(v / base, base, upper);
-    putchar((v % base) < 10 ? ((v % base) + '0') : ((v % base) - 10 + (upper ? 'A' : 'a')));
+    if(v / base) start = _sprinti(v / base, start, base, upper);
+    *start++ = (v % base) < 10 ? ((v % base) + '0') : ((v % base) - 10 + (upper ? 'A' : 'a'));
+    return start;
 }
 
-int vprintf(char *fmt, va_list ap) {
+/* vsprintf */
+int vsprintf(char *s, char *fmt, va_list ap) {
     int n = 0;
     char *p;
+    char *orig = s;
     
     while(*fmt) {
         if(*fmt == '%') {
@@ -51,45 +57,63 @@ int vprintf(char *fmt, va_list ap) {
             
             switch(*fmt) {
                 case '%':
-                    putchar('%');
+                    *s++ = '%';
                     break;
                 case 'i':
                 case 'd':
                 case 'u':
-                    _printi(va_arg(ap, int), 10, 0);
+                    s = _sprinti(va_arg(ap, int), s, 10, 0);
                     break;
                 case 'p':
                     p = va_arg(ap, void *);
                     if(p) {
-                        _call("puts", "0x");
-                        _printi(p, 16, 0);
+                        *s++ = '0';
+                        *s++ = 'x';
+                        s = _sprinti(p, s, 16, 0);
                     } else {
-                        _call("puts", "(nil)");
+                        s = stpcpy(s, "(nil)");
                     }
                     break;
                 case 'x':
-                    _printi(va_arg(ap, int), 16, 0);
+                    s = _sprinti(va_arg(ap, int), s, 16, 0);
                     break;
                 case 'X':
-                    _printi(va_arg(ap, int), 16, 1);
+                    s = _sprinti(va_arg(ap, int), s, 16, 1);
                     break;
                 case 'o':
-                    _printi(va_arg(ap, int), 8, 0);
+                    s = _sprinti(va_arg(ap, int), s, 8, 0);
                     break;
                 case 'c':
-                    putchar(va_arg(ap, char));
+                    *s++ = va_arg(ap, char);
                     break;
                 case 's':
                     p = va_arg(ap, char *);
-                    _call("puts", p ? p : "(null)");
+                    s = stpcpy(s, p ? p : "(null)");
                     break;
                 default:
                     return -1;
             }
-        } else putchar(*fmt);
+        } else *s++ = *fmt;
         
         fmt++, n++;
+        
+        if(s - orig > 2000)
+            break;
     }
+    
+    *s = '\0';
+    
+    return n;
+}
+
+
+/* vprintf */
+int vprintf(char *fmt, va_list ap) {
+    int n;
+    static char buf[2046];
+    
+    n = vsprintf(buf, fmt, ap);
+    if(n != -1) _call("puts", buf);
     
     return n;
 }
