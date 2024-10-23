@@ -118,6 +118,18 @@ int vprintf(char *fmt, va_list ap) {
     return n;
 }
 
+/* sprintf */
+int sprintf(char *s, char *fmt, ...) {
+    int n;
+    va_list ap;
+    
+    va_start(ap, fmt);
+    n = vsprintf(s, fmt, ap);
+    va_end(ap);
+    
+    return n;
+}
+
 #ifndef _DEFAULT_PRINTF
 int printf(char *fmt, ...) {
     int n;
