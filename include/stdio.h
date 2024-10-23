@@ -110,7 +110,7 @@ int vsprintf(char *s, char *fmt, va_list ap) {
 /* vprintf */
 int vprintf(char *fmt, va_list ap) {
     int n;
-    static char buf[2046];
+    static char buf[2048];
     
     n = vsprintf(buf, fmt, ap);
     if(n != -1) {
