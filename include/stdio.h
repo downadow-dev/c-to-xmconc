@@ -113,7 +113,11 @@ int vprintf(char *fmt, va_list ap) {
     static char buf[2046];
     
     n = vsprintf(buf, fmt, ap);
-    if(n != -1) _call("puts", buf);
+    if(n != -1) {
+        for(char *p = buf; *p; p++) {
+            putchar(*p);
+        }
+    }
     
     return n;
 }
