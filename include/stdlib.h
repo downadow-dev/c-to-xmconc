@@ -1,10 +1,21 @@
-#ifndef __useful_h
-#ifdef  __XCC_C__
+#ifndef _STDLIB_H
+#define _STDLIB_H   1
 
-#define __useful_h   1
+/* codes for exit() */
+#define EXIT_SUCCESS   0
+#define EXIT_FAILURE   1
+/********************/
+#define abort()        exit(-1)
 
-#include <misc.h>
 #include <ctype.h>
+#include <stddef.h>
+
+/* abs */
+#define labs    abs
+#define llabs   abs
+int abs(int v) {
+    return v > 0 ? v : -v;
+}
 
 /* strtol */
 
@@ -94,5 +105,4 @@ int atoi(char *s) {
     return negative ? -num : num;
 }
 
-#endif
 #endif
