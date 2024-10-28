@@ -603,20 +603,26 @@ def compile_obj(obj, root=False):
         elif type(obj) == UnaryOp and obj.op == '~':
             return compile_obj(obj.expr) + ' neg --'
         # поле объединения/структуры
-        elif type(obj) == StructRef and obj.type == '.' and obj.name.name in unionlist:
+        elif type(obj) == StructRef and obj.type == '.' and type(obj.name) == ID and obj.name.name in unionlist:
             return '{' + obj.name.name + '} .'
-        elif type(obj) == StructRef and obj.type == '->' and obj.name.name in unionlist:
+        elif type(obj) == StructRef and obj.type == '->' and type(obj.name) == ID and obj.name.name in unionlist:
             return '{' + obj.name.name + '}'
-        elif type(obj) == StructRef and obj.type == '.':
+        elif type(obj) == StructRef:
             i = 0
-            while structs[structures[obj.name.name]][i].name != obj.field.name:
+            struct = []
+            if type(obj.name) == Cast and type(obj.name.to_type.type) == TypeDecl and type(obj.name.to_type.type.type) == Struct:
+                struct = structs[obj.name.to_type.type.type.name].copy()
+            elif type(obj.name) == Cast and type(obj.name.to_type.type) == PtrDecl and type(obj.name.to_type.type.type) == TypeDecl and type(obj.name.to_type.type.type.type) == Struct:
+                struct = structs[obj.name.to_type.type.type.type.name].copy()
+            elif type(obj.name) == Cast and type(obj.name.to_type.type) == TypeDecl and type(obj.name.to_type.type.type) == IdentifierType:
+                struct = structs[obj.name.to_type.type.type.names[0] + '___STRUCT'].copy()
+            elif type(obj.name) == Cast and type(obj.name.to_type.type) == PtrDecl and type(obj.name.to_type.type.type) == TypeDecl and type(obj.name.to_type.type.type.type) == IdentifierType:
+                struct = structs[obj.name.to_type.type.type.type.names[0] + '___STRUCT'].copy()
+            else:
+                struct = structs[structures[obj.name.name]].copy()
+            while struct[i].name != obj.field.name:
                 i += 1
-            return '{' + obj.name.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '.'
-        elif type(obj) == StructRef and obj.type == '->':
-            i = 0
-            while structs[structures[obj.name.name]][i].name != obj.field.name:
-                i += 1
-            return '{' + obj.name.name + '}! ' + ((str(i) + ' + ') if i != 0 else '') + '.'
+            return compile_obj(obj.name)[:(-2 if obj.type == '.' else None)] + ' ' + ((str(i) + ' + ') if i != 0 else '') + '.'
         # вызов функции (1)
         elif type(obj) == FuncCall and (type(obj.name) != ID or (obj.name.name in variables or (current_function + '.' + obj.name.name) in variables)):
             code = ''
@@ -726,19 +732,9 @@ def compile_obj(obj, root=False):
             return (compile_obj(obj.expr) if not root else '') + ' (' + compile_obj(obj.expr) + ' ++) ' + compile_obj(obj.expr)[:-2] + ' ='
         elif type(obj) == UnaryOp and obj.op == 'p--':
             return (compile_obj(obj.expr) if not root else '') + ' (' + compile_obj(obj.expr) + ' --) ' + compile_obj(obj.expr)[:-2] + ' ='
-        # получение адреса переменной/массива/элемента массива/структуры/поля
+        # получение адреса переменной/массива/элемента массива/структуры
         elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and obj.expr.name in structures:
             return '{' + obj.expr.name + '}'
-        elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == StructRef and obj.expr.type == '.':
-            i = 0
-            while structs[structures[obj.expr.name.name]][i].name != obj.expr.field.name:
-                i += 1
-            return '{' + obj.expr.name.name + '} ' + str(i) + ' +'
-        elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == StructRef and obj.expr.type == '->':
-            i = 0
-            while structs[structures[obj.expr.name.name]][i].name != obj.expr.field.name:
-                i += 1
-            return '{' + obj.expr.name.name + '}! ' + str(i) + ' +'
         elif type(obj) == UnaryOp and obj.op == '&':
             return compile_obj(obj.expr)[:-2]
         # *expr
