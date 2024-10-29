@@ -280,6 +280,15 @@ def compile_obj(obj, root=False):
                     enumerators[item.name] = i
                     i += 1
             return ''
+        elif (type(obj) == Typedef) and type(obj.type.type) == Enum:
+            if obj.type.type.values != None:
+                i = 0
+                for item in obj.type.type.values.enumerators:
+                    if item.value != None:
+                        i = int(item.value.value)
+                    enumerators[item.name] = i
+                    i += 1
+            return ''
         # struct
         elif type(obj) == Decl and type(obj.type) == Struct:
             structs[obj.type.name] = obj.type.decls
