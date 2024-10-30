@@ -401,16 +401,6 @@ def compile_obj(obj, root=False):
             unionlist[obj.name] = name
             if obj.type.type.name == None:
                 unions[name] = obj.type.type.decls
-        # указатель на структуру
-        elif type(obj) == Decl and type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and (type(obj.type.type.type) == Struct or (type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedef_structs)):
-            structures[obj.name] = (obj.type.type.type.name if type(obj.type.type.type) == Struct else (obj.type.type.type.names[0] + '___STRUCT'))
-            
-            code = ''
-            code += '/alloc ' + obj.name + '\n'
-            if obj.init != None:
-                code += compile_obj(obj.init) + ' {' + obj.name + '} =\n' 
-            
-            return code
         # указатель на объединение
         elif type(obj) == Decl and type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and (type(obj.type.type.type) == Union or (type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedef_unions)):
             unionlist[obj.name] = (obj.type.type.type.name if type(obj.type.type.type) == Union else (obj.type.type.type.names[0] + '___UNION'))
@@ -530,6 +520,9 @@ def compile_obj(obj, root=False):
                         + ' =\n'
             return code
         elif type(obj) == Decl and (current_function != '' and current_function != 'main') and not 'static' in obj.storage:
+            if type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and (type(obj.type.type.type) == Struct or (type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedef_structs)):
+                structures[obj.name] = (obj.type.type.type.name if type(obj.type.type.type) == Struct else (obj.type.type.type.names[0] + '___STRUCT'))
+            
             code = ''
             if type(obj.type) == TypeDecl and type(obj.type.type) == Enum:
                 compile_obj(Decl(None, None, None, None, None, obj.type.type, None, None))
@@ -542,6 +535,9 @@ def compile_obj(obj, root=False):
             
             return code
         elif type(obj) == Decl:
+            if type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and (type(obj.type.type.type) == Struct or (type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedef_structs)):
+                structures[obj.name] = (obj.type.type.type.name if type(obj.type.type.type) == Struct else (obj.type.type.type.names[0] + '___STRUCT'))
+            
             code = ''
             if type(obj.type) == TypeDecl and type(obj.type.type) == Enum:
                 if obj.type.type.values != None:
