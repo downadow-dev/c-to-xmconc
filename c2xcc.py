@@ -365,6 +365,9 @@ def compile_obj(obj, root=False):
         elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
             name = (obj.type.type.name if obj.type.type.name != None else obj.name + '__STRUCT')
             
+            if obj.type.type.name != None and obj.type.type.decls != None:
+                structs[obj.type.type.name] = obj.type.type.decls
+            
             structures[obj.name] = name
             if obj.type.type.name == None:
                 structs[name] = obj.type.type.decls
@@ -867,6 +870,7 @@ def compile_obj(obj, root=False):
         else:
             return '# (unknown) #\n'
     except Exception as e:
+        raise e
         print('*** compile_obj() error (\n\t' + str(e) + '\n)', file=sys.stderr)
         return ''
 
