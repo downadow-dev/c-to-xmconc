@@ -251,7 +251,7 @@ def compile_obj(obj, root=False):
                 except Exception:
                     ''
                 
-                if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
+                if type(obj.decl.type.type) != PtrDecl and type(obj.decl.type.type.type) == IdentifierType and obj.decl.type.type.type.names[0].startswith('__thr'):
                     code += '~' + obj.decl.name + '.___start create_thrd1 0 {return} ' + obj.decl.name + '.___start: thrd_1\n'
                 
             
@@ -259,7 +259,7 @@ def compile_obj(obj, root=False):
                 for item in obj.body.block_items:
                     code += compile_obj(item, root=True) + '\n'
             
-            if type(obj.decl.type.type) != PtrDecl and obj.decl.type.type.type.names[0].startswith('__thr'):
+            if type(obj.decl.type.type) != PtrDecl and type(obj.decl.type.type.type) == IdentifierType and obj.decl.type.type.type.names[0].startswith('__thr'):
                 code += '\nhalt thrd_0\n'
             else:
                 code += '\n0 ' + ('{return}' if current_function != 'main' else 'exit')
@@ -363,7 +363,7 @@ def compile_obj(obj, root=False):
             elif obj.init != None:
                 i = 0
                 for decl in structs[structures[obj.name]]:
-                    code += compile_obj(obj.init)[:-2] + ' ' + str(i) + ' + . ' + compile_obj(obj.name)[:-2] + ' ' \
+                    code += compile_obj(obj.init) + ' ' + str(i) + ' + . ' + compile_obj(obj.name) + ' ' \
                     + str(i) + ' + =\n'
                     i += 1
             return code
@@ -397,7 +397,7 @@ def compile_obj(obj, root=False):
             elif obj.init != None:
                 i = 0
                 for decl in structs[structures[obj.name]]:
-                    code += compile_obj(obj.init)[:-2] + ' ' + str(i) + ' + . ' + compile_obj(obj.name)[:-2] + ' ' \
+                    code += compile_obj(obj.init) + ' ' + str(i) + ' + . ' + compile_obj(obj.name) + ' ' \
                     + str(i) + ' + =\n'
                     i += 1
             return code
@@ -436,7 +436,7 @@ def compile_obj(obj, root=False):
             i = 0
             code = ''
             for decl in structs[structures[obj.lvalue.name]]:
-                code += compile_obj(obj.rvalue)[:-2] + ' ' + str(i) + ' + . ' + compile_obj(obj.lvalue)[:-2] + ' ' \
+                code += compile_obj(obj.rvalue) + ' ' + str(i) + ' + . ' + compile_obj(obj.lvalue) + ' ' \
                 + str(i) + ' + =\n'
                 i += 1
             return code
@@ -666,6 +666,9 @@ def compile_obj(obj, root=False):
             continuel += 1
             
             return code
+        ###################
+        elif type(obj) == ID and obj.name in structures:
+            return get_var(obj.name) + '  '
         # переменная
         elif type(obj) == ID:
             return get_var(obj.name) + ' .'
