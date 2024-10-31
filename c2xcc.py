@@ -367,10 +367,12 @@ def compile_obj(obj, root=False):
                         code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
             elif obj.init != None:
                 i = 0
+                code += compile_obj(obj.init) + '\n'
                 for decl in structs[structures[obj.name]]:
-                    code += compile_obj(obj.init) + ' ' + str(i) + ' + . ' + compile_obj(obj.name) + ' ' \
+                    code += 'dup ' + str(i) + ' + . {' + obj.name + '} ' \
                     + str(i) + ' + =\n'
                     i += 1
+                code += 'drop'
             return code
         elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
             name = (obj.type.type.name if obj.type.type.name != None else obj.name + '__STRUCT')
@@ -402,10 +404,12 @@ def compile_obj(obj, root=False):
                         code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
             elif obj.init != None:
                 i = 0
+                code += compile_obj(obj.init) + '\n'
                 for decl in structs[structures[obj.name]]:
-                    code += compile_obj(obj.init) + ' ' + str(i) + ' + . ' + compile_obj(obj.name) + ' ' \
+                    code += 'dup ' + str(i) + ' + . {' + obj.name + '} ' \
                     + str(i) + ' + =\n'
                     i += 1
+                code += 'drop'
             return code
         # объединение
         elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == IdentifierType and obj.type.type.names[0] in typedef_unions:
@@ -440,11 +444,12 @@ def compile_obj(obj, root=False):
         # присваивание (копирование структуры)
         elif type(obj) == Assignment and obj.op == '=' and type(obj.lvalue) == ID and obj.lvalue.name in structuresnoptrs:
             i = 0
-            code = ''
+            code = compile_obj(obj.rvalue) + '\n'
             for decl in structs[structures[obj.lvalue.name]]:
-                code += compile_obj(obj.rvalue) + ' ' + str(i) + ' + . ' + compile_obj(obj.lvalue) + ' ' \
+                code += 'dup ' + str(i) + ' + . ' + compile_obj(obj.lvalue) + ' ' \
                 + str(i) + ' + =\n'
                 i += 1
+            code += 'drop'
             return code
         # присваивание
         elif type(obj) == Assignment and obj.op == '=':
