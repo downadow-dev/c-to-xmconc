@@ -22,6 +22,7 @@ current_break = ''
 enumerators = {}
 structs = {}
 structures = {}
+structuresnoptrs = {}
 unions = {}
 unionlist = {}
 
@@ -53,6 +54,8 @@ def reset():
     enumerators = {}
     global structures
     structures = {}
+    global structuresnoptrs
+    structuresnoptrs = {}
     global structs
     structs = {}
     global unionlist
@@ -186,6 +189,7 @@ def compile_obj(obj, root=False):
     global enumerators
     global structs
     global structures
+    global structuresnoptrs
     global unions
     global unionlist
     global typedef_structs
@@ -342,6 +346,7 @@ def compile_obj(obj, root=False):
             name = obj.type.type.names[0] + '___STRUCT'
             
             structures[obj.name] = name
+            structuresnoptrs[obj.name] = name
             
             code = ''
             code += '/alloc ' + obj.name + '[' + str(len(structs[name])) + ']\n'
@@ -374,6 +379,7 @@ def compile_obj(obj, root=False):
                 structs[obj.type.type.name] = obj.type.type.decls
             
             structures[obj.name] = name
+            structuresnoptrs[obj.name] = name
             if obj.type.type.name == None:
                 structs[name] = obj.type.type.decls
             
@@ -432,7 +438,7 @@ def compile_obj(obj, root=False):
             code = ''
             return code + '\n~' + obj.expr.name
         # присваивание (копирование структуры)
-        elif type(obj) == Assignment and obj.op == '=' and type(obj.lvalue) == ID and obj.lvalue.name in structures:
+        elif type(obj) == Assignment and obj.op == '=' and type(obj.lvalue) == ID and obj.lvalue.name in structuresnoptrs:
             i = 0
             code = ''
             for decl in structs[structures[obj.lvalue.name]]:
@@ -541,6 +547,8 @@ def compile_obj(obj, root=False):
         elif type(obj) == Decl and (current_function != '' and current_function != 'main') and not 'static' in obj.storage:
             if type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and (type(obj.type.type.type) == Struct or (type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedef_structs)):
                 structures[obj.name] = (obj.type.type.type.name if type(obj.type.type.type) == Struct else (obj.type.type.type.names[0] + '___STRUCT'))
+                if obj.name in structuresnoptrs:
+                    del structuresnoptrs[obj.name]
             
             code = ''
             if type(obj.type) == TypeDecl and type(obj.type.type) == Enum:
@@ -556,6 +564,8 @@ def compile_obj(obj, root=False):
         elif type(obj) == Decl:
             if type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and (type(obj.type.type.type) == Struct or (type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedef_structs)):
                 structures[obj.name] = (obj.type.type.type.name if type(obj.type.type.type) == Struct else (obj.type.type.type.names[0] + '___STRUCT'))
+                if obj.name in structuresnoptrs:
+                    del structuresnoptrs[obj.name]
             
             code = ''
             if type(obj.type) == TypeDecl and type(obj.type.type) == Enum:
@@ -667,7 +677,7 @@ def compile_obj(obj, root=False):
             
             return code
         ###################
-        elif type(obj) == ID and obj.name in structures:
+        elif type(obj) == ID and obj.name in structuresnoptrs:
             return get_var(obj.name) + '  '
         # переменная
         elif type(obj) == ID:
