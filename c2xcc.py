@@ -859,15 +859,13 @@ def compile_obj(obj, root=False):
             
             i = 0
             
-            code += '/alloc ___switchvar' + str(saved) + '\n'
-            code += compile_obj(obj.cond) + ' {___switchvar' + str(saved) + '} =\n'
+            code += compile_obj(obj.cond) + '\n'
             
             for item in obj.stmt.block_items:
                 if type(item) != Default:
-                    code += '{___switchvar' + str(saved) + '} . ' + compile_obj(item.expr) + ' =? ~___switchl' + str(saved) + '_' + str(i) + ' then\n'
-                
+                    code += 'dup ' + compile_obj(item.expr) + ' =? ~___switchl' + str(saved) + '_' + str(i) + ' then\n'
                 i += 1
-            
+            code += 'drop\n'
             i = 0
             
             for item in obj.stmt.block_items:
