@@ -939,7 +939,7 @@ def compile_obj(obj, root=False):
         else:
             return '# (unknown) #\n'
     except Exception as e:
-        raise e
+        #raise e
         print('*** compile_obj() error (\n\t' + str(e) + '\n)', file=sys.stderr)
         return ''
 
