@@ -91,6 +91,52 @@ def create_var(name, array_len=0):
         variables += [name]
     return '/alloc ' + name + ('[' + str(array_len) + ']' if array_len > 0 else '') + '\n'
 
+def get_struct(obj):
+    struct = []
+    
+    if type(obj) == ID:
+        return structs[structures[obj.name]].copy()
+    elif type(obj) == UnaryOp:
+        return get_struct(obj.expr)
+    elif type(obj) == BinaryOp:
+        return get_struct(obj.left)
+    # (struct NAME)
+    elif type(obj) == Cast and type(obj.to_type.type) == TypeDecl and type(obj.to_type.type.type) == Struct:
+        struct = structs[obj.to_type.type.type.name].copy()
+    # (struct NAME *)
+    elif type(obj) == Cast and type(obj.to_type.type) == PtrDecl and type(obj.to_type.type.type) == TypeDecl and type(obj.to_type.type.type.type) == Struct:
+        struct = structs[obj.to_type.type.type.type.name].copy()
+    # (type)
+    elif type(obj) == Cast and type(obj.to_type.type) == TypeDecl and type(obj.to_type.type.type) == IdentifierType:
+        struct = structs[obj.to_type.type.type.names[0] + '___STRUCT'].copy()
+    # (type *)
+    elif type(obj) == Cast and type(obj.to_type.type) == PtrDecl and type(obj.to_type.type.type) == TypeDecl and type(obj.to_type.type.type.type) == IdentifierType:
+        struct = structs[obj.to_type.type.type.type.names[0] + '___STRUCT'].copy()
+    # id
+    elif type(obj) == ID:
+        struct = structs[structures[obj.name]].copy()
+    # StructRef
+    elif type(obj) == StructRef:
+        struct = get_struct(obj.name)
+        for decl in struct:
+            if obj.field.name == decl.name:
+                if type(decl.type) == TypeDecl and type(decl.type.type) == IdentifierType:
+                    return structs[decl.type.type.names[0] + '___STRUCT'].copy()
+                elif type(decl.type) == PtrDecl and type(decl.type.type) == TypeDecl and type(decl.type.type.type) == IdentifierType:
+                    return structs[decl.type.type.type.names[0] + '___STRUCT'].copy()
+                elif type(decl.type) == TypeDecl and type(decl.type.type) == Struct:
+                    return structs[decl.type.type.name].copy()
+                elif type(decl.type) == PtrDecl and type(decl.type.type) == TypeDecl and type(decl.type.type.type) == Struct:
+                    return structs[decl.type.type.type.name].copy()
+                else:
+                    raise Exception('StructRef error')
+                    return []
+    # ?
+    else:
+        raise Exception('StructRef error')
+        return []
+    return struct
+
 # преобразовать '\'-последовательности в строке
 def preprocess_string(s):
     # пропустить префиксы вроде L
@@ -651,19 +697,11 @@ def compile_obj(obj, root=False):
             return '{' + obj.name.name + '}'
         elif type(obj) == StructRef:
             i = 0
-            struct = []
-            if type(obj.name) == Cast and type(obj.name.to_type.type) == TypeDecl and type(obj.name.to_type.type.type) == Struct:
-                struct = structs[obj.name.to_type.type.type.name].copy()
-            elif type(obj.name) == Cast and type(obj.name.to_type.type) == PtrDecl and type(obj.name.to_type.type.type) == TypeDecl and type(obj.name.to_type.type.type.type) == Struct:
-                struct = structs[obj.name.to_type.type.type.type.name].copy()
-            elif type(obj.name) == Cast and type(obj.name.to_type.type) == TypeDecl and type(obj.name.to_type.type.type) == IdentifierType:
-                struct = structs[obj.name.to_type.type.type.names[0] + '___STRUCT'].copy()
-            elif type(obj.name) == Cast and type(obj.name.to_type.type) == PtrDecl and type(obj.name.to_type.type.type) == TypeDecl and type(obj.name.to_type.type.type.type) == IdentifierType:
-                struct = structs[obj.name.to_type.type.type.type.names[0] + '___STRUCT'].copy()
-            else:
-                struct = structs[structures[obj.name.name]].copy()
+            struct = get_struct(obj.name)
+            
             while struct[i].name != obj.field.name:
                 i += 1
+            
             return compile_obj(obj.name)[:(-2 if obj.type == '.' else None)] + ' ' + ((str(i) + ' + ') if i != 0 else '') + '.'
         # вызов функции (1)
         elif type(obj) == FuncCall and (type(obj.name) != ID or (obj.name.name in variables or (current_function + '.' + obj.name.name) in variables)):
@@ -901,6 +939,7 @@ def compile_obj(obj, root=False):
         else:
             return '# (unknown) #\n'
     except Exception as e:
+        raise e
         print('*** compile_obj() error (\n\t' + str(e) + '\n)', file=sys.stderr)
         return ''
 
