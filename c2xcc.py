@@ -96,6 +96,8 @@ def get_struct(obj):
     
     if type(obj) == ID:
         return structs[structures[obj.name]].copy()
+    elif type(obj) == ArrayRef:
+        return structs[structures[obj.name.name]].copy()
     elif type(obj) == UnaryOp:
         return get_struct(obj.expr)
     elif type(obj) == BinaryOp:
