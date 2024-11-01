@@ -206,7 +206,7 @@ def static_int(obj):
     elif type(obj) == Constant and obj.type == 'int' and obj.value.startswith('0'):
         return int(obj.value[1:], base=8)
     elif type(obj) == Constant and obj.type == 'int':
-        return int(obj.value)
+        return int(obj.value, base=10)
     elif type(obj) == BinaryOp and obj.op == '+':
         return static_int(obj.left) + static_int(obj.right)
     elif type(obj) == BinaryOp and obj.op == '-':
@@ -217,6 +217,16 @@ def static_int(obj):
         return static_int(obj.left) / static_int(obj.right)
     elif type(obj) == BinaryOp and obj.op == '%':
         return static_int(obj.left) % static_int(obj.right)
+    elif type(obj) == BinaryOp and obj.op == '^':
+        return static_int(obj.left) ^ static_int(obj.right)
+    elif type(obj) == BinaryOp and obj.op == '<<':
+        return static_int(obj.left) << static_int(obj.right)
+    elif type(obj) == BinaryOp and obj.op == '>>':
+        return static_int(obj.left) >> static_int(obj.right)
+    elif type(obj) == BinaryOp and obj.op == '|':
+        return static_int(obj.left) | static_int(obj.right)
+    elif type(obj) == BinaryOp and obj.op == '&':
+        return static_int(obj.left) & static_int(obj.right)
     elif type(obj) == UnaryOp and obj.op == 'sizeof':
         return 1
 
