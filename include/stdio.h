@@ -31,7 +31,7 @@ int putchar(int c) {
 
 /* print a number */
 
-char *_sprinti(int v, char *start, int base, int upper) {
+char *_sprinti(long long v, char *start, int base, int upper) {
     if(v < 0) {
         v = -v;
         *start++ = '-';
@@ -84,7 +84,7 @@ int vsprintf(char *s, char *fmt, va_list ap) {
                     s = _sprinti(va_arg(ap, int), s, 8, 0);
                     break;
                 case 'c':
-                    *s = va_arg(ap, char);
+                    *s = (char *)va_arg(ap, int);
                     if(*s) s++;
                     break;
                 case 's':
