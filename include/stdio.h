@@ -84,7 +84,7 @@ int vsprintf(char *s, char *fmt, va_list ap) {
                     s = _sprinti(va_arg(ap, int), s, 8, 0);
                     break;
                 case 'c':
-                    *s = (char *)va_arg(ap, int);
+                    *s = (char)va_arg(ap, int);
                     if(*s) s++;
                     break;
                 case 's':
