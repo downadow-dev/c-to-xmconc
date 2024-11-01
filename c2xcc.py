@@ -263,6 +263,8 @@ def compile_obj(obj, root=False):
             for item in obj.block_items:
                 code += compile_obj(item) + '\n'
             return code
+        elif type(obj) == NamedInitializer:
+            return compile_obj(obj.expr)
         elif type(obj) == ExprList:
             code = ''
             for item in obj.exprs:
@@ -418,11 +420,22 @@ def compile_obj(obj, root=False):
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
+                    expr = obj.init.exprs[i]
+                    saved_i = i
+                    if type(expr) == NamedInitializer:
+                        i = 0
+                        for decl in structs[name]:
+                            if decl.name == expr.name[0].name:
+                                break
+                            i += 1
+                    
                     if type(structs[name][i].type) == ArrayDecl:
-                        for j in range(len(obj.init.exprs[i].exprs)):
-                            code += compile_obj(obj.init.exprs[i].exprs[j]) + ' ((({' + obj.name + '} ' + str(i) + ' +) .) '+str(j)+' +) =\n'
+                        for j in range(len(expr.exprs)):
+                            code += compile_obj(expr.exprs[j]) + ' ((({' + obj.name + '} ' + str(i) + ' +) .) '+str(j)+' +) =\n'
                     else:
-                        code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
+                        code += compile_obj(expr) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
+                    if type(expr) == NamedInitializer:
+                        i = saved_i
             elif obj.init != None:
                 i = 0
                 code += compile_obj(obj.init) + '\n'
@@ -455,11 +468,22 @@ def compile_obj(obj, root=False):
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
+                    expr = obj.init.exprs[i]
+                    saved_i = i
+                    if type(expr) == NamedInitializer:
+                        i = 0
+                        for decl in structs[name]:
+                            if decl.name == expr.name[0].name:
+                                break
+                            i += 1
+                    
                     if type(structs[name][i].type) == ArrayDecl:
-                        for j in range(len(obj.init.exprs[i].exprs)):
-                            code += compile_obj(obj.init.exprs[i].exprs[j]) + ' ((({' + obj.name + '} ' + str(i) + ' +) .) '+str(j)+' +) =\n'
+                        for j in range(len(expr.exprs)):
+                            code += compile_obj(expr.exprs[j]) + ' ((({' + obj.name + '} ' + str(i) + ' +) .) '+str(j)+' +) =\n'
                     else:
-                        code += compile_obj(obj.init.exprs[i]) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
+                        code += compile_obj(expr) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
+                    if type(expr) == NamedInitializer:
+                        i = saved_i
             elif obj.init != None:
                 i = 0
                 code += compile_obj(obj.init) + '\n'
@@ -592,7 +616,9 @@ def compile_obj(obj, root=False):
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
-                    code += compile_obj(obj.init.exprs[i]) + ' (' + get_var(obj.name + '__ARRAY__') + ' ' + str(i) + ' +) =\n'
+                    code += compile_obj(obj.init.exprs[i]) + ' (' + get_var(obj.name + '__ARRAY__') + ' ' \
+                    + (str(i) if type(obj.init.exprs[i]) != NamedInitializer else compile_obj(obj.init.exprs[i].name[0])) \
+                    + ' +) =\n'
             
             elif obj.init != None and type(obj.init) == Constant:
                 for i in range(len(preprocess_string(obj.init.value))):
