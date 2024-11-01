@@ -27,6 +27,7 @@ unions = {}
 unionlist = {}
 
 typedef_structs = []
+typedef_pstructs = []
 typedef_unions = []
 
 def reset():
@@ -64,6 +65,8 @@ def reset():
     unions = {}
     global typedef_structs
     typedef_structs = []
+    global typedef_pstructs
+    typedef_pstructs = []
     global typedef_unions
     typedef_unions = []
     global current_continue
@@ -251,6 +254,7 @@ def compile_obj(obj, root=False):
     global unions
     global unionlist
     global typedef_structs
+    global typedef_pstructs
     global typedef_unions
     global current_continue
     global current_break
@@ -382,6 +386,7 @@ def compile_obj(obj, root=False):
             else:
                 structs[obj.name + '___STRUCT'] = structs[obj.type.type.type.name]
             typedef_structs += [obj.name]
+            typedef_pstructs += [obj.name]
             
             return ''
         # typedef union ... name
@@ -406,7 +411,8 @@ def compile_obj(obj, root=False):
             name = obj.type.type.names[0] + '___STRUCT'
             
             structures[obj.name] = name
-            structuresnoptrs[obj.name] = name
+            if not obj.type.type.names[0] in typedef_pstructs:
+                structuresnoptrs[obj.name] = name
             
             code = ''
             code += '/alloc ' + obj.name + '[' + str(len(structs[name])) + ']\n'
