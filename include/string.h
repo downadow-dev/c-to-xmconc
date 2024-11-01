@@ -58,9 +58,10 @@ int memcmp(char *m1, char *m2, size_t n) {
 char *memmove(char *dst, char *src, size_t n) {
     if(dst < src)
         return memcpy(dst, src, n);
-    
-    for(int i = n-1; i >= 0; i--)
-        dst[i] = src[i];
+    else if(dst != src) {
+        for(int i = n-1; i >= 0; i--)
+            dst[i] = src[i];
+    }
     return dst;
 }
 
