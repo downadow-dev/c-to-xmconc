@@ -430,14 +430,15 @@ def compile_obj(obj, root=False):
                 structuresnoptrs[obj.name] = name
             
             code = ''
-            code += '/alloc ' + obj.name + '[' + str(len(structs[name])) + ']\n'
             
-            i = 0
+            l = 0
             for decl in structs[name]:
                 if type(decl.type) == ArrayDecl:
-                    code += '/alloc _Array' + str(i) + '___' + name + '[' + str(static_int(decl.type.dim)) + ']\n'
-                    code += '{_Array' + str(i) + '___' + name + '} ({' + obj.name + '} ' + str(i) + ' +) =\n'
-                i += 1
+                    l += static_int(decl.type.dim)
+                else:
+                    l += 1
+            
+            code += '/alloc ' + obj.name + '[' + str(l) + ']\n'
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
@@ -478,14 +479,14 @@ def compile_obj(obj, root=False):
                 structs[name] = obj.type.type.decls
             
             code = ''
-            code += '/alloc ' + obj.name + '[' + str(len(structs[name])) + ']\n'
-            
-            i = 0
+            l = 0
             for decl in structs[name]:
                 if type(decl.type) == ArrayDecl:
-                    code += '/alloc _Array' + str(i) + '___' + name + '[' + str(static_int(decl.type.dim)) + ']\n'
-                    code += '{_Array' + str(i) + '___' + name + '} ({' + obj.name + '} ' + str(i) + ' +) =\n'
-                i += 1
+                    l += static_int(decl.type.dim)
+                else:
+                    l += 1
+            
+            code += '/alloc ' + obj.name + '[' + str(l) + ']\n'
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
@@ -747,18 +748,22 @@ def compile_obj(obj, root=False):
         elif type(obj) == UnaryOp and obj.op == '~':
             return compile_obj(obj.expr) + ' neg --'
         # поле объединения/структуры
-        elif type(obj) == StructRef and obj.type == '.' and type(obj.name) == ID and obj.name.name in unionlist:
-            return '{' + obj.name.name + '} .'
-        elif type(obj) == StructRef and obj.type == '->' and type(obj.name) == ID and obj.name.name in unionlist:
-            return '{' + obj.name.name + '}'
+        elif type(obj) == StructRef and type(obj.name) == ID and obj.name.name in unionlist:
+            return '{' + obj.name.name + '} ' + ('.' if obj.type == '.' else ' ')
         elif type(obj) == StructRef:
             i = 0
+            j = 0
             struct = get_struct(obj.name)
             
-            while struct[i].name != obj.field.name:
-                i += 1
+            while struct[j].name != obj.field.name:
+                if type(struct[j].type) == ArrayDecl:
+                    i += static_int(struct[j].type.dim)
+                else:
+                    i += 1
+                j += 1
             
-            return compile_obj(obj.name)[:(-2 if obj.type == '.' else None)] + ' ' + ((str(i) + ' + ') if i != 0 else '') + '.'
+            return compile_obj(obj.name)[:(-2 if obj.type == '.' else None)] + ' ' + ((str(i) + ' + ') if i != 0 else '') \
+            + ('.' if type(struct[j].type) != ArrayDecl else ' ')
         # вызов функции (1)
         elif type(obj) == FuncCall and (type(obj.name) != ID or (obj.name.name in variables or (current_function + '.' + obj.name.name) in variables)):
             code = ''
@@ -995,7 +1000,7 @@ def compile_obj(obj, root=False):
         else:
             return '# (unknown) #\n'
     except Exception as e:
-        raise e
+        #raise e
         print('*** compile_obj() error (\n\t' + str(e) + '\n)', file=sys.stderr)
         return ''
 
