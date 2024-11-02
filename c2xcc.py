@@ -610,7 +610,7 @@ def compile_obj(obj, root=False):
                 for i in range(static_int(obj.type.dim)):
                     code += create_var(obj.name + str(i), static_int(obj.type.type.dim)) \
                         + get_var(obj.name + str(i)) + ' ' \
-                        + (get_var(obj.name) + ' . ' + str(i) + ' +') \
+                        + (get_var(obj.name) + ' ' + str(i) + ' +') \
                         + ' =\n'
             return code
         elif type(obj) == Decl and (current_function != '' and current_function != 'main') and not 'static' in obj.storage:
