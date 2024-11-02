@@ -708,6 +708,8 @@ def compile_obj(obj, root=False):
                     else:
                         return '1'
             return '0'
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and obj.expr.name in structuresnoptrs:
+            return get_var(obj.expr.name)[:-1] + '.length}'
         elif type(obj) == UnaryOp and obj.op == 'sizeof':
             return '1'
         # -выражение
