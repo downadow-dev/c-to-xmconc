@@ -8,6 +8,7 @@ current_function = ''   # мы находимся в теле этой функ�
 
 variables = []          # переменные
 functions = []          # функции
+arrays = []
 
 funcfixed = {}
 
@@ -35,6 +36,8 @@ def reset():
     continuel = 0
     global variables
     variables = []
+    global arrays
+    arrays = []
     global functions
     functions = []
     global funcfixed
@@ -83,15 +86,26 @@ def get_var(name):
     else:
         return '{' + current_function + '.' + name + '}'
 
+def is_array(name):
+    return ((current_function != '' and (current_function + '.' + name) in arrays) or name in arrays)
+
 # создаёт переменную/массив
 def create_var(name, array_len=0):
     global variables
+    global arrays
     
     if current_function != '':
         name = current_function + '.' + name
     
     if not name in variables:
         variables += [name]
+    if not name in arrays and array_len > 0:
+        arrays += [name]
+    elif name in arrays and array_len <= 0:
+        for i in range(len(arrays)):
+            if arrays[i] == name:
+                del arrays[i]
+                break
     return '/alloc ' + name + ('[' + str(array_len) + ']' if array_len > 0 else '') + '\n'
 
 def get_struct(obj):
@@ -242,6 +256,7 @@ def compile_obj(obj, root=False):
     global current_string
     global current_function
     global variables
+    global arrays
     global functions
     global current_if
     global current_while
@@ -615,27 +630,25 @@ def compile_obj(obj, root=False):
                 code += compile_obj(item) + '\n'
             return code
         elif type(obj) == Decl and type(obj.type) == ArrayDecl and (obj.type.dim != None or obj.init != None):
-            code = create_var(obj.name + '__ARRAY__', (static_int(obj.type.dim) if obj.type.dim != None else \
-              (len(obj.init.exprs) if type(obj.init) == InitList else len(preprocess_string(obj.init.value)) + 1))) \
-                + create_var(obj.name) \
-                + get_var(obj.name + '__ARRAY__') + ' ' + get_var(obj.name) + ' =\n'
+            code = create_var(obj.name, (static_int(obj.type.dim) if obj.type.dim != None else \
+              (len(obj.init.exprs) if type(obj.init) == InitList else len(preprocess_string(obj.init.value)) + 1))) + '\n'
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
-                    code += compile_obj(obj.init.exprs[i]) + ' (' + get_var(obj.name + '__ARRAY__') + ' ' \
+                    code += compile_obj(obj.init.exprs[i]) + ' (' + get_var(obj.name) + ' ' \
                     + (str(i) if type(obj.init.exprs[i]) != NamedInitializer else compile_obj(obj.init.exprs[i].name[0])) \
                     + ' +) =\n'
             
             elif obj.init != None and type(obj.init) == Constant:
                 for i in range(len(preprocess_string(obj.init.value))):
-                    code += str(ord(preprocess_string(obj.init.value)[i])) + ' (' + get_var(obj.name + '__ARRAY__') + ' ' + str(i) + ' +) =\n'
-                code += '0 (' + get_var(obj.name + '__ARRAY__') + ' ' + str(len(preprocess_string(obj.init.value))) + ' +) =\n'
+                    code += str(ord(preprocess_string(obj.init.value)[i])) + ' (' + get_var(obj.name) + ' ' + str(i) + ' +) =\n'
+                code += '0 (' + get_var(obj.name) + ' ' + str(len(preprocess_string(obj.init.value))) + ' +) =\n'
             
             # если массив является двумерным
             if type(obj.type.type) == ArrayDecl:
                 for i in range(static_int(obj.type.dim)):
-                    code += create_var(obj.name + '__ARRAY__' + str(i), static_int(obj.type.type.dim)) \
-                        + get_var(obj.name + '__ARRAY__' + str(i)) + ' ' \
+                    code += create_var(obj.name + str(i), static_int(obj.type.type.dim)) \
+                        + get_var(obj.name + str(i)) + ' ' \
                         + (get_var(obj.name) + ' . ' + str(i) + ' +') \
                         + ' =\n'
             return code
@@ -704,9 +717,8 @@ def compile_obj(obj, root=False):
         elif type(obj) == ArrayRef:
             return compile_obj(obj.name) + ' ' + compile_obj(obj.subscript) + ' + .'
         # sizeof
-        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and \
-        ((obj.expr.name + '__ARRAY__') in variables or (current_function + '.' + obj.expr.name + '__ARRAY__') in variables):
-            return get_var(obj.expr.name)[:-1] + '__ARRAY__.length}'
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and is_array(obj.expr.name):
+            return get_var(obj.expr.name)[:-1] + '.length}'
         elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == Typename and \
         type(obj.expr.type) == TypeDecl and type(obj.expr.type.type) == Struct and \
         obj.expr.type.type.name in structs:
@@ -764,7 +776,7 @@ def compile_obj(obj, root=False):
             
             return code
         ###################
-        elif type(obj) == ID and obj.name in structuresnoptrs:
+        elif type(obj) == ID and (obj.name in structuresnoptrs or is_array(obj.name)):
             return get_var(obj.name) + '  '
         # переменная
         elif type(obj) == ID:
@@ -983,7 +995,7 @@ def compile_obj(obj, root=False):
         else:
             return '# (unknown) #\n'
     except Exception as e:
-        #raise e
+        raise e
         print('*** compile_obj() error (\n\t' + str(e) + '\n)', file=sys.stderr)
         return ''
 
