@@ -63,6 +63,22 @@ def create_var(name, array_len=0):
                 break
     return '/alloc ' + name + ('[' + str(array_len) + ']' if array_len > 0 else '') + '\n'
 
+def get_struct_length(struct):
+    l = 0
+    for decl in struct:
+        if type(decl.type) == ArrayDecl:
+            l += static_int(decl.type.dim)
+        elif type(decl.type) == TypeDecl and ((type(decl.type.type) == Struct) or \
+        (type(decl.type.type) == IdentifierType and decl.type.type.names[0] in typedef_structs)):
+            for d in structs[decl.type.type.name if type(decl.type.type) == Struct else (decl.type.type.names[0] + '___STRUCT')]:
+                if type(d.type) == ArrayDecl:
+                    l += static_int(d.type.dim)
+                else:
+                    l += 1
+        else:
+            l += 1
+    return l
+
 def get_struct(obj):
     struct = []
     
@@ -387,21 +403,7 @@ def compile_obj(obj, root=False):
             
             code = ''
             
-            l = 0
-            for decl in structs[name]:
-                if type(decl.type) == ArrayDecl:
-                    l += static_int(decl.type.dim)
-                elif type(decl.type) == TypeDecl and ((type(decl.type.type) == Struct) or \
-                (type(decl.type.type) == IdentifierType and decl.type.type.names[0] in typedef_structs)):
-                    for d in structs[decl.type.type.name if type(decl.type.type) == Struct else (decl.type.type.names[0] + '___STRUCT')]:
-                        if type(d.type) == ArrayDecl:
-                            l += static_int(d.type.dim)
-                        else:
-                            l += 1
-                else:
-                    l += 1
-            
-            code += '/alloc ' + obj.name + '[' + str(l) + ']\n'
+            code += '/alloc ' + obj.name + '[' + str(get_struct_length(structs[name])) + ']\n'
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
@@ -443,21 +445,7 @@ def compile_obj(obj, root=False):
             
             code = ''
             
-            l = 0
-            for decl in structs[name]:
-                if type(decl.type) == ArrayDecl:
-                    l += static_int(decl.type.dim)
-                elif type(decl.type) == TypeDecl and ((type(decl.type.type) == Struct) or \
-                (type(decl.type.type) == IdentifierType and decl.type.type.names[0] in typedef_structs)):
-                    for d in structs[decl.type.type.name if type(decl.type.type) == Struct else (decl.type.type.names[0] + '___STRUCT')]:
-                        if type(d.type) == ArrayDecl:
-                            l += static_int(d.type.dim)
-                        else:
-                            l += 1
-                else:
-                    l += 1
-            
-            code += '/alloc ' + obj.name + '[' + str(l) + ']\n'
+            code += '/alloc ' + obj.name + '[' + str(get_struct_length(structs[name])) + ']\n'
             
             if obj.init != None and type(obj.init) == InitList:
                 for i in range(len(obj.init.exprs)):
@@ -688,7 +676,9 @@ def compile_obj(obj, root=False):
             return str(ord(preprocess_string(obj.value)))
         # элемент массива
         elif type(obj) == ArrayRef:
-            return compile_obj(obj.name) + ' ' + compile_obj(obj.subscript) + ' + .'
+            return compile_obj(obj.name) + ' ' + compile_obj(obj.subscript) \
+            + ((' ' + str(get_struct_length(structs[structures[obj.name.name]])) + ' *') if type(obj.name) == ID and \
+            obj.name.name in structures and not obj.name.name in structuresnoptrs else '') + ' + .'
         # sizeof
         elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and is_array(obj.expr.name):
             return get_var(obj.expr.name)[:-1] + '.length}'
@@ -981,7 +971,7 @@ def compile_obj(obj, root=False):
         else:
             return '# (unknown) #\n'
     except Exception as e:
-        #raise e
+        raise e
         if not noprint:
             print('*** compile_obj() error (\n\t' + str(e) + '\n)', file=sys.stderr)
         return ''
