@@ -12,6 +12,7 @@ arrays = []
 
 funcfixed = {}
 
+noprint = False
 continuel = 0
 current_if = 0
 current_for = 0
@@ -30,52 +31,6 @@ unionlist = {}
 typedef_structs = []
 typedef_pstructs = []
 typedef_unions = []
-
-def reset():
-    global continuel
-    continuel = 0
-    global variables
-    variables = []
-    global arrays
-    arrays = []
-    global functions
-    functions = []
-    global funcfixed
-    funcfixed = {}
-    global current_function
-    current_function = ''
-    global current_string
-    current_string = 0
-    global current_if
-    current_if = 0
-    global current_for
-    current_for = 0
-    global current_while
-    current_while = 0
-    global current_switchl
-    current_switchl = 0
-    global enumerators
-    enumerators = {}
-    global structures
-    structures = {}
-    global structuresnoptrs
-    structuresnoptrs = {}
-    global structs
-    structs = {}
-    global unionlist
-    unionlist = {}
-    global unions
-    unions = {}
-    global typedef_structs
-    typedef_structs = []
-    global typedef_pstructs
-    typedef_pstructs = []
-    global typedef_unions
-    typedef_unions = []
-    global current_continue
-    current_continue = ''
-    global current_break
-    current_break = ''
 
 # получить переменную/массив
 def get_var(name):
@@ -305,7 +260,8 @@ def compile_obj(obj, root=False):
                 
                 if obj.decl.type.args != None and len(obj.decl.type.args.params) > 1:
                     if not '___get_args' in functions:
-                        print('*** ERROR while compiling main(): please give "-include include/___get_args.h"', file=sys.stderr)
+                        if not noprint:
+                            print('*** ERROR while compiling main(): please give "-include include/___get_args.h"', file=sys.stderr)
                         return ''
                     
                     code += '/alloc ' + obj.decl.type.args.params[0].name + '\n'
@@ -650,6 +606,7 @@ def compile_obj(obj, root=False):
               (len(obj.init.exprs) if type(obj.init) == InitList else len(preprocess_string(obj.init.value)) + 1))) + '\n'
             
             if obj.init != None and type(obj.init) == InitList:
+                code += get_var(obj.name) + ' 0 ' + get_var(obj.name)[:-1] + '.length}' + ' memset\n'
                 for i in range(len(obj.init.exprs)):
                     code += compile_obj(obj.init.exprs[i]) + ' (' + get_var(obj.name) + ' ' \
                     + (str(i) if type(obj.init.exprs[i]) != NamedInitializer else compile_obj(obj.init.exprs[i].name[0])) \
@@ -1023,7 +980,8 @@ def compile_obj(obj, root=False):
             return '# (unknown) #\n'
     except Exception as e:
         #raise e
-        print('*** compile_obj() error (\n\t' + str(e) + '\n)', file=sys.stderr)
+        if not noprint:
+            print('*** compile_obj() error (\n\t' + str(e) + '\n)', file=sys.stderr)
         return ''
 
 ################################################################################
@@ -1040,6 +998,29 @@ if __name__ == '__main__':
     if len(sys.argv) > 2:
         cppargs += sys.argv[2].split(' ')
     ast = parse_file(sys.argv[1], use_cpp=True, cpp_args=cppargs)
+    
+    noprint = True
+    for item in ast:
+        compile_obj(item, root=True)
+    noprint = False
+    
+    variables = []
+    functions = []
+    arrays = []
+    
+    funcfixed = {}
+    
+    continuel = 0
+    current_if = 0
+    current_for = 0
+    current_while = 0
+    current_switchl = 0
+    current_continue = ''
+    current_break = ''
+    
+    structures = {}
+    structuresnoptrs = {}
+    unionlist = {}
     
     print(get_init_code())
     for item in ast:
