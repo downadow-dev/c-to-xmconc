@@ -257,8 +257,9 @@ def compile_obj(obj, root=False):
             return compile_obj(obj.expr)
         elif type(obj) == ExprList:
             code = ''
-            for item in obj.exprs:
+            for item in obj.exprs[:-1]:
                 code += compile_obj(item, root=True) + '\n'
+            code += compile_obj(obj.exprs[-1], root=root)
             return code
         elif type(obj) == ID and obj.name == '__func__':
             current_string += 1
