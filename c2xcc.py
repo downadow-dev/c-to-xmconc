@@ -302,7 +302,14 @@ def compile_obj(obj, root=False):
                             code += create_var('___vargs', 126)
                             break
                         code += compile_obj(param) + '\n'
-                        code += get_var(param.name) + ' =\n'
+                        if not param.name in structuresnoptrs:
+                            code += get_var(param.name) + ' =\n'
+                        else:
+                            j = 0
+                            for decl in structs[structures[param.name]]:
+                                code += 'dup ' + str(j) + ' + . {' + param.name + '} ' + str(j) + ' + =\n'
+                                j += 1
+                            code += 'drop\n'
                         i += 1
                 except Exception:
                     ''
