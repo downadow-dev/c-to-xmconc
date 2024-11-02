@@ -435,6 +435,13 @@ def compile_obj(obj, root=False):
             for decl in structs[name]:
                 if type(decl.type) == ArrayDecl:
                     l += static_int(decl.type.dim)
+                elif type(decl.type) == TypeDecl and ((type(decl.type.type) == Struct) or \
+                (type(decl.type.type) == IdentifierType and decl.type.type.names[0] in typedef_structs)):
+                    for d in structs[decl.type.type.name if type(decl.type.type) == Struct else (decl.type.type.names[0] + '___STRUCT')]:
+                        if type(d.type) == ArrayDecl:
+                            l += static_int(d.type.dim)
+                        else:
+                            l += 1
                 else:
                     l += 1
             
@@ -479,10 +486,18 @@ def compile_obj(obj, root=False):
                 structs[name] = obj.type.type.decls
             
             code = ''
+            
             l = 0
             for decl in structs[name]:
                 if type(decl.type) == ArrayDecl:
                     l += static_int(decl.type.dim)
+                elif type(decl.type) == TypeDecl and ((type(decl.type.type) == Struct) or \
+                (type(decl.type.type) == IdentifierType and decl.type.type.names[0] in typedef_structs)):
+                    for d in structs[decl.type.type.name if type(decl.type.type) == Struct else (decl.type.type.names[0] + '___STRUCT')]:
+                        if type(d.type) == ArrayDecl:
+                            l += static_int(d.type.dim)
+                        else:
+                            l += 1
                 else:
                     l += 1
             
@@ -758,6 +773,13 @@ def compile_obj(obj, root=False):
             while struct[j].name != obj.field.name:
                 if type(struct[j].type) == ArrayDecl:
                     i += static_int(struct[j].type.dim)
+                elif type(struct[j].type) == TypeDecl and ((type(struct[j].type.type) == Struct) or \
+                (type(struct[j].type.type) == IdentifierType and struct[j].type.type.names[0] in typedef_structs)):
+                    for d in structs[struct[j].type.type.name if type(struct[j].type.type) == Struct else (struct[j].type.type.names[0] + '___STRUCT')]:
+                        if type(d.type) == ArrayDecl:
+                            i += static_int(d.type.dim)
+                        else:
+                            i += 1
                 else:
                     i += 1
                 j += 1
