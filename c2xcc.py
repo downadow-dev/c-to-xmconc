@@ -87,12 +87,6 @@ def get_struct(obj):
     # (struct NAME *)
     elif type(obj) == Cast and type(obj.to_type.type) == PtrDecl and type(obj.to_type.type.type) == TypeDecl and type(obj.to_type.type.type.type) == Struct:
         struct = structs[obj.to_type.type.type.type.name].copy()
-    # (type)
-    elif type(obj) == Cast and type(obj.to_type.type) == TypeDecl and type(obj.to_type.type.type) == IdentifierType:
-        struct = structs[obj.to_type.type.type.names[0] + '___STRUCT'].copy()
-    # (type *)
-    elif type(obj) == Cast and type(obj.to_type.type) == PtrDecl and type(obj.to_type.type.type) == TypeDecl and type(obj.to_type.type.type.type) == IdentifierType:
-        struct = structs[obj.to_type.type.type.type.names[0] + '___STRUCT'].copy()
     # id
     elif type(obj) == ID:
         struct = structs[structures[obj.name]].copy()
