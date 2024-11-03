@@ -246,7 +246,7 @@ def compile_obj(obj, root=False):
         obj = preprocess_typedefs(obj)
         
         if type(obj) == Typedef:
-            typedefs[obj.name] = obj.type
+            typedefs[obj.name] = preprocess_typedefs(obj.type)
             return ''
         elif obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
             return ''
@@ -557,7 +557,15 @@ def compile_obj(obj, root=False):
             return code
         elif type(obj) == Decl and (current_function != '' and current_function != 'main') and not 'static' in obj.storage:
             if type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and type(obj.type.type.type) == Struct:
-                structures[obj.name] = obj.type.type.type.name
+                name = (obj.type.type.type.name if obj.type.type.type.name != None else obj.name + '__STRUCT')
+                
+                if obj.type.type.type.name != None and obj.type.type.type.decls != None:
+                    structs[obj.type.type.type.name] = obj.type.type.type.decls
+                
+                structures[obj.name] = name
+                if obj.type.type.type.name == None:
+                    structs[name] = obj.type.type.type.decls
+                
                 if obj.name in structuresnoptrs:
                     del structuresnoptrs[obj.name]
             
@@ -574,7 +582,15 @@ def compile_obj(obj, root=False):
             return code
         elif type(obj) == Decl:
             if type(obj.type) == PtrDecl and type(obj.type.type) == TypeDecl and type(obj.type.type.type) == Struct:
-                structures[obj.name] = obj.type.type.type.name
+                name = (obj.type.type.type.name if obj.type.type.type.name != None else obj.name + '__STRUCT')
+                
+                if obj.type.type.type.name != None and obj.type.type.type.decls != None:
+                    structs[obj.type.type.type.name] = obj.type.type.type.decls
+                
+                structures[obj.name] = name
+                if obj.type.type.type.name == None:
+                    structs[name] = obj.type.type.type.decls
+                
                 if obj.name in structuresnoptrs:
                     del structuresnoptrs[obj.name]
             
@@ -904,7 +920,7 @@ def compile_obj(obj, root=False):
             return '~' + current_break + ' goto'
         elif type(obj) == BinaryOp or type(obj) == UnaryOp:
             return compile_cond(obj)
-        elif type(obj) == EmptyStatement or type(obj) == Typedef:
+        elif type(obj) == EmptyStatement:
             return ''
         else:
             return '# (unknown) #\n'
