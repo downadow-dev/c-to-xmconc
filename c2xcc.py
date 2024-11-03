@@ -575,8 +575,8 @@ def compile_obj(obj, root=False):
             # если массив является двумерным
             if type(obj.type.type) == ArrayDecl:
                 for i in range(static_int(obj.type.dim)):
-                    code += create_var(obj.name + str(i), static_int(obj.type.type.dim)) \
-                        + get_var(obj.name + str(i)) + ' ' \
+                    code += create_var(obj.name + '__A_' + str(i), static_int(obj.type.type.dim)) \
+                        + get_var(obj.name + '__A_' + str(i)) + ' ' \
                         + (get_var(obj.name) + ' ' + str(i) + ' +') \
                         + ' =\n'
             return code
