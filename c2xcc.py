@@ -73,6 +73,8 @@ def get_struct_length(struct):
 def get_struct(obj):
     struct = []
     
+    obj = preprocess_typedefs(obj)
+    
     if type(obj) == ID:
         return structs[structures[obj.name]].copy()
     elif type(obj) == ArrayRef:
@@ -95,11 +97,8 @@ def get_struct(obj):
         struct = get_struct(obj.name)
         for decl in struct:
             if obj.field.name == decl.name:
-                if type(decl.type) == TypeDecl and type(decl.type.type) == IdentifierType:
-                    return structs[decl.type.type.names[0] + '___STRUCT'].copy()
-                elif type(decl.type) == PtrDecl and type(decl.type.type) == TypeDecl and type(decl.type.type.type) == IdentifierType:
-                    return structs[decl.type.type.type.names[0] + '___STRUCT'].copy()
-                elif type(decl.type) == TypeDecl and type(decl.type.type) == Struct:
+                decl.type = preprocess_typedefs(decl.type)
+                if type(decl.type) == TypeDecl and type(decl.type.type) == Struct:
                     return structs[decl.type.type.name].copy()
                 elif type(decl.type) == PtrDecl and type(decl.type.type) == TypeDecl and type(decl.type.type.type) == Struct:
                     return structs[decl.type.type.type.name].copy()
@@ -205,6 +204,17 @@ def static_int(obj):
     elif type(obj) == UnaryOp and obj.op == 'sizeof':
         return 1
 
+def preprocess_typedefs(obj):
+    if type(obj) == Decl:
+        obj.type = preprocess_typedefs(obj.type)
+    elif type(obj) == TypeDecl and type(obj.type) == IdentifierType and obj.type.names[0] in typedefs:
+        obj = typedefs[obj.type.names[0]]
+    elif (type(obj) == PtrDecl or type(obj) == ArrayDecl):
+        obj.type = preprocess_typedefs(obj.type)
+    elif type(obj) == Cast:
+        obj.to_type.type = preprocess_typedefs(obj.to_type.type)
+    return obj
+
 current_string = -1
 # компиляция числа, переменной и т. д.
 def compile_obj(obj, root=False):
@@ -229,18 +239,11 @@ def compile_obj(obj, root=False):
     global typedefs
     
     try:
+        obj = preprocess_typedefs(obj)
+        
         if type(obj) == Typedef:
             typedefs[obj.name] = obj.type
             return ''
-        elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == IdentifierType and obj.type.type.names[0] in typedefs:
-            obj.type = typedefs[obj.type.type.names[0]]
-            return compile_obj(obj)
-        elif type(obj) == Decl and (type(obj.type) == PtrDecl or type(obj.type) == ArrayDecl) and type(obj.type.type) == TypeDecl and type(obj.type.type.type) == IdentifierType and obj.type.type.type.names[0] in typedefs:
-            obj.type.type = typedefs[obj.type.type.type.names[0]]
-            return compile_obj(obj)
-        elif type(obj) == Decl and (type(obj.type) == PtrDecl or type(obj.type) == ArrayDecl) and (type(obj.type.type) == PtrDecl or type(obj.type.type) == ArrayDecl) and type(obj.type.type.type) == TypeDecl and type(obj.type.type.type.type) == IdentifierType and obj.type.type.type.type.names[0] in typedefs:
-            obj.type.type.type = typedefs[obj.type.type.type.type.names[0]]
-            return compile_obj(obj)
         elif obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
             return ''
         elif type(obj) == Compound:
@@ -651,6 +654,7 @@ def compile_obj(obj, root=False):
             struct = get_struct(obj.name)
             
             while struct[j].name != obj.field.name:
+                struct[j].type = preprocess_typedefs(struct[j].type)
                 if type(struct[j].type) == ArrayDecl:
                     i += static_int(struct[j].type.dim)
                 elif type(struct[j].type) == TypeDecl and type(struct[j].type.type) == Struct:
