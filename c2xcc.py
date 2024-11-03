@@ -744,43 +744,6 @@ def compile_obj(obj, root=False):
                 code += compile_obj(o) + ' '
             code += preprocess_string(obj.args.exprs[0].value)
             return code
-        # printf
-        elif type(obj) == FuncCall and obj.name.name == 'printf' and not obj.name.name in functions:
-            s_format = preprocess_string(obj.args.exprs[0].value)
-            etc = []
-            etc += obj.args.exprs[1:]
-            ptr = 0
-            
-            code = ''
-            
-            i = 0
-            while i < len(s_format):
-                if s_format[i] == '%' and s_format[i + 1] == '%':
-                    code += '\'%\' putc '
-                    i += 1
-                elif s_format[i] == '%' and s_format[i + 1] == 'c':
-                    code += compile_obj(etc[ptr]) + ' putc '
-                    ptr += 1
-                    i += 1
-                elif s_format[i] == '%' and s_format[i + 1] == 's':
-                    code += compile_obj(etc[ptr]) + ' puts '
-                    ptr += 1
-                    i += 1
-                elif s_format[i] == '%' and (s_format[i + 1] == 'd' or s_format[i + 1] == 'u' or s_format[i + 1] == 'i' or s_format[i + 1] == 'p'):
-                    code += compile_obj(etc[ptr]) + ' putn '
-                    ptr += 1
-                    i += 1
-                elif s_format[i] == '\n':
-                    code += 'newline '
-                elif s_format[i] == '\b':
-                    code += 'backspace '
-                elif s_format[i] == '\r':
-                    code += 'cr '
-                else:
-                    code += str(ord(s_format[i])) + ' putc '
-                
-                i += 1
-            return code
         # вызов функции (2)
         elif type(obj) == FuncCall:
             code = ''
