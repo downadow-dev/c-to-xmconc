@@ -70,11 +70,7 @@ def get_struct_length(struct):
             l += static_int(decl.type.dim)
         elif type(decl.type) == TypeDecl and ((type(decl.type.type) == Struct) or \
         (type(decl.type.type) == IdentifierType and decl.type.type.names[0] in typedef_structs)):
-            for d in structs[decl.type.type.name if type(decl.type.type) == Struct else (decl.type.type.names[0] + '___STRUCT')]:
-                if type(d.type) == ArrayDecl:
-                    l += static_int(d.type.dim)
-                else:
-                    l += 1
+            l += get_struct_length(structs[decl.type.type.name if type(decl.type.type) == Struct else (decl.type.type.names[0] + '___STRUCT')])
         else:
             l += 1
     return l
@@ -305,10 +301,8 @@ def compile_obj(obj, root=False):
                         if not param.name in structuresnoptrs:
                             code += get_var(param.name) + ' =\n'
                         else:
-                            j = 0
-                            for decl in structs[structures[param.name]]:
+                            for j in range(get_struct_length(structs[structures[param.name]])):
                                 code += 'dup ' + str(j) + ' + . {' + param.name + '} ' + str(j) + ' + =\n'
-                                j += 1
                             code += 'drop\n'
                         i += 1
                 except Exception:
@@ -514,12 +508,10 @@ def compile_obj(obj, root=False):
             return code + '\n~' + obj.expr.name
         # присваивание (копирование структуры)
         elif type(obj) == Assignment and obj.op == '=' and type(obj.lvalue) == ID and obj.lvalue.name in structuresnoptrs:
-            i = 0
             code = compile_obj(obj.rvalue) + '\n'
-            for decl in structs[structures[obj.lvalue.name]]:
+            for i in range(get_struct_length(structs[structures[obj.lvalue.name]])):
                 code += 'dup ' + str(i) + ' + . ' + compile_obj(obj.lvalue) + ' ' \
                 + str(i) + ' + =\n'
-                i += 1
             code += 'drop'
             return code
         # присваивание
