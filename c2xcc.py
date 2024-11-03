@@ -213,6 +213,10 @@ def preprocess_typedefs(obj):
         obj.type = preprocess_typedefs(obj.type)
     elif type(obj) == Cast:
         obj.to_type.type = preprocess_typedefs(obj.to_type.type)
+    
+    if type(obj) == PtrDecl and type(obj.type) == PtrDecl:
+        obj.type = preprocess_typedefs(obj.type.type)
+    
     return obj
 
 current_string = -1
