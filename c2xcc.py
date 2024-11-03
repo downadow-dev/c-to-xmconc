@@ -263,6 +263,17 @@ def compile_obj(obj, root=False):
         # новая функция
         elif type(obj) == FuncDef:
             code = ''
+            
+            savedvariables = variables.copy()
+            savedarrays = arrays.copy()
+            savedstructures = structures.copy()
+            savedstructuresnoptrs = structuresnoptrs.copy()
+            savedunionlist = unionlist.copy()
+            savedenumerators = enumerators.copy()
+            savedtypedef_structs = typedef_structs.copy()
+            savedtypedef_pstructs = typedef_pstructs.copy()
+            savedtypedef_unions = typedef_unions.copy()
+            
             # создавать функции получается только в глобальном пространстве имён ('')
             if current_function != '':
                 raise Exception('create function: current_function != \'\'')
@@ -325,6 +336,16 @@ def compile_obj(obj, root=False):
                 code += '\n' + obj.decl.name + '___END:\n'
             
             current_function = ''
+            
+            variables = savedvariables
+            arrays = savedarrays
+            structures = savedstructures
+            structuresnoptrs = savedstructuresnoptrs
+            unionlist = savedunionlist
+            enumerators = savedenumerators
+            typedef_structs = savedtypedef_structs
+            typedef_pstructs = savedtypedef_pstructs
+            typedef_unions = savedtypedef_unions
             
             return code
         # новый enum
