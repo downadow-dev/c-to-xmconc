@@ -396,12 +396,24 @@ def compile_obj(obj, root=False):
             
             return ''
         # структура
-        elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == IdentifierType and obj.type.type.names[0] in typedef_structs:
-            name = obj.type.type.names[0] + '___STRUCT'
-            
-            structures[obj.name] = name
-            if not obj.type.type.names[0] in typedef_pstructs:
+        elif type(obj) == Decl and type(obj.type) == TypeDecl and ((type(obj.type.type) == IdentifierType and obj.type.type.names[0] in typedef_structs) or type(obj.type.type) == Struct):
+            name = ''
+            if not type(obj.type.type) == Struct:
+                name = obj.type.type.names[0] + '___STRUCT'
+                
+                structures[obj.name] = name
+                if not obj.type.type.names[0] in typedef_pstructs:
+                    structuresnoptrs[obj.name] = name
+            else:
+                name = (obj.type.type.name if obj.type.type.name != None else obj.name + '__STRUCT')
+                
+                if obj.type.type.name != None and obj.type.type.decls != None:
+                    structs[obj.type.type.name] = obj.type.type.decls
+                
+                structures[obj.name] = name
                 structuresnoptrs[obj.name] = name
+                if obj.type.type.name == None:
+                    structs[name] = obj.type.type.decls
             
             code = ''
             
@@ -418,53 +430,8 @@ def compile_obj(obj, root=False):
                                 break
                             i += 1
                     
-                    if type(structs[name][i].type) == ArrayDecl:
-                        for j in range(len(expr.exprs)):
-                            code += compile_obj(expr.exprs[j]) + ' ((({' + obj.name + '} ' + str(i) + ' +) .) '+str(j)+' +) =\n'
-                    else:
-                        code += compile_obj(expr) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
-                    if type(expr) == NamedInitializer:
-                        i = saved_i
-            elif obj.init != None:
-                i = 0
-                code += compile_obj(obj.init) + '\n'
-                for decl in structs[structures[obj.name]]:
-                    code += 'dup ' + str(i) + ' + . {' + obj.name + '} ' \
-                    + str(i) + ' + =\n'
-                    i += 1
-                code += 'drop'
-            return code
-        elif type(obj) == Decl and type(obj.type) == TypeDecl and type(obj.type.type) == Struct:
-            name = (obj.type.type.name if obj.type.type.name != None else obj.name + '__STRUCT')
-            
-            if obj.type.type.name != None and obj.type.type.decls != None:
-                structs[obj.type.type.name] = obj.type.type.decls
-            
-            structures[obj.name] = name
-            structuresnoptrs[obj.name] = name
-            if obj.type.type.name == None:
-                structs[name] = obj.type.type.decls
-            
-            code = ''
-            
-            code += '/alloc ' + obj.name + '[' + str(get_struct_length(structs[name])) + ']\n'
-            
-            if obj.init != None and type(obj.init) == InitList:
-                for i in range(len(obj.init.exprs)):
-                    expr = obj.init.exprs[i]
-                    saved_i = i
-                    if type(expr) == NamedInitializer:
-                        i = 0
-                        for decl in structs[name]:
-                            if decl.name == expr.name[0].name:
-                                break
-                            i += 1
+                    code += compile_obj(expr) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
                     
-                    if type(structs[name][i].type) == ArrayDecl:
-                        for j in range(len(expr.exprs)):
-                            code += compile_obj(expr.exprs[j]) + ' ((({' + obj.name + '} ' + str(i) + ' +) .) '+str(j)+' +) =\n'
-                    else:
-                        code += compile_obj(expr) + ' {' + obj.name + '} ' + ((str(i) + ' + ') if i != 0 else '') + '=\n'
                     if type(expr) == NamedInitializer:
                         i = saved_i
             elif obj.init != None:
