@@ -531,6 +531,18 @@ def compile_obj(obj, root=False):
             for item in obj.decls:
                 code += compile_obj(item) + '\n'
             return code
+        elif type(obj) == Decl and type(obj.type) == ArrayDecl and type(obj.type.type) == TypeDecl and type(obj.type.type.type) == Struct:
+            name = (obj.type.type.type.name if obj.type.type.type.name != None else obj.name + '__STRUCT')
+            
+            if obj.type.type.type.name != None and obj.type.type.type.decls != None:
+                structs[obj.type.type.type.name] = obj.type.type.type.decls
+            
+            structures[obj.name] = name
+            structuresnoptrs[obj.name] = name
+            if obj.type.type.type.name == None:
+                structs[name] = obj.type.type.type.decls
+            
+            return '/alloc ' + obj.name + '[' + str(get_struct_length(structs[name]) * static_int(obj.type.dim)) + ']\n'
         elif type(obj) == Decl and type(obj.type) == ArrayDecl and (obj.type.dim != None or obj.init != None):
             code = create_var(obj.name, (static_int(obj.type.dim) if obj.type.dim != None else \
               (len(obj.init.exprs) if type(obj.init) == InitList else len(preprocess_string(obj.init.value)) + 1))) + '\n'
@@ -636,7 +648,7 @@ def compile_obj(obj, root=False):
         elif type(obj) == ArrayRef:
             return compile_obj(obj.name) + ' ' + compile_obj(obj.subscript) \
             + ((' ' + str(get_struct_length(structs[structures[obj.name.name]])) + ' *') if type(obj.name) == ID and \
-            obj.name.name in structures and not obj.name.name in structuresnoptrs else '') + ' + .'
+            obj.name.name in structures else '') + ' + .'
         # sizeof
         elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and is_array(obj.expr.name):
             return get_var(obj.expr.name)[:-1] + '.length}'
