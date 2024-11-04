@@ -168,14 +168,14 @@ def compile_cond(op):
             code = ''
             saved = current_if
             current_if += 1
-            code += compile_cond(op.left) + ' ~___ANDend' + str(saved) + ' else '
+            code += compile_cond(op.left) + ' dup ~___ANDend' + str(saved) + ' else drop '
             code += compile_cond(op.right) + ' ___ANDend' + str(saved) + ':'
             return code
         elif op.op == '||':
             code = ''
             saved = current_if
             current_if += 1
-            code += compile_cond(op.left) + ' ~___ORend' + str(saved) + ' then '
+            code += compile_cond(op.left) + ' dup ~___ORend' + str(saved) + ' then drop '
             code += compile_cond(op.right) + ' ___ORend' + str(saved) + ':'
             return code
         
