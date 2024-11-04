@@ -665,7 +665,11 @@ def compile_obj(obj, root=False):
                         return '1'
             return '0'
         elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and obj.expr.name in structuresnoptrs:
-            return get_var(obj.expr.name)[:-1] + '.length}'
+            return str(get_struct_length(structs[structures[obj.expr.name]]))
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == UnaryOp and obj.expr.op == '*' and type(obj.expr.expr) == ID and obj.expr.expr.name in structures and not obj.expr.expr.name in structuresnoptrs:
+            return str(get_struct_length(structs[structures[obj.expr.expr.name]]))
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ArrayRef and type(obj.expr.name) == ID and obj.expr.name.name in structures and not obj.expr.name.name in structuresnoptrs:
+            return str(get_struct_length(structs[structures[obj.expr.name.name]]))
         elif type(obj) == UnaryOp and obj.op == 'sizeof':
             return '1'
         # -выражение
