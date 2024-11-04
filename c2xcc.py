@@ -137,7 +137,7 @@ def get_init_code():
 /alloc ___ret[64]
 /alloc __retptr
 0 {__retptr} =
-/define function :({___ret} {__retptr}! +) = ({__retptr}! ++) {__retptr} =
+/define ___function :({___ret} {__retptr}! +) = ({__retptr}! ++) {__retptr} =
 /define return :({__retptr}! --) {__retptr} = (({___ret} {__retptr}! +) .) goto
 '''
 
@@ -245,7 +245,7 @@ def compile_obj(obj, root=False):
     try:
         obj = preprocess_typedefs(obj)
         
-        if type(obj) == Typedef:
+        if (type(obj) == Typedef) and not obj.name.startswith('__thr'):
             typedefs[obj.name] = preprocess_typedefs(obj.type)
             return ''
         elif obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
@@ -302,7 +302,7 @@ def compile_obj(obj, root=False):
                     functions += [obj.decl.name]
                 current_function = obj.decl.name
                 
-                code += obj.decl.name + ': {function}\n'
+                code += obj.decl.name + ': {___function}\n'
                 
                 try:
                     i = 0
