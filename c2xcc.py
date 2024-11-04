@@ -143,6 +143,8 @@ def get_init_code():
 
 # "2 == 4" => "2 4 =?" и т. д.
 def compile_cond(op):
+    global current_if
+    
     if op == None:
         return '1' # true
     elif type(op) == UnaryOp and op.op == '!':
@@ -163,9 +165,19 @@ def compile_cond(op):
             return compile_obj(op.left) + ' ' + compile_obj(op.right) + ' ++ lt?'
         
         elif op.op == '&&':
-            return compile_cond(op.left) + ' ' + compile_cond(op.right) + ' ?'
+            code = ''
+            saved = current_if
+            current_if += 1
+            code += compile_cond(op.left) + ' ~___ANDend' + str(saved) + ' else drop '
+            code += compile_cond(op.right) + ' ___ANDend' + str(saved) + ':'
+            return code
         elif op.op == '||':
-            return compile_cond(op.left) + ' ' + compile_cond(op.right) + ' |?'
+            code = ''
+            saved = current_if
+            current_if += 1
+            code += compile_cond(op.left) + ' ~___ORend' + str(saved) + ' then drop '
+            code += compile_cond(op.right) + ' ___ORend' + str(saved) + ':'
+            return code
         
         else:
             return compile_obj(op) + ' 0 !?'
