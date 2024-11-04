@@ -175,7 +175,9 @@ def compile_cond(op):
 
 
 def static_int(obj):
-    if type(obj) == Constant and obj.type == 'int' and obj.value.startswith('0x'):
+    if type(obj) == Constant and obj.type == 'int' and obj.value == '0':
+        return 0
+    elif type(obj) == Constant and obj.type == 'int' and obj.value.startswith('0x'):
         return int(obj.value[2:], base=16)
     elif type(obj) == Constant and obj.type == 'int' and obj.value.startswith('0'):
         return int(obj.value[1:], base=8)
