@@ -248,7 +248,7 @@ def compile_obj(obj, root=False):
         if (type(obj) == Typedef) and not obj.name.startswith('__thr'):
             typedefs[obj.name] = preprocess_typedefs(obj.type)
             return ''
-        elif obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
+        elif obj == None or (type(obj) == Decl and 'extern' in obj.storage) or ((type(obj) == Constant or type(obj) == Cast) and root):
             return ''
         elif type(obj) == Compound:
             code = ''
