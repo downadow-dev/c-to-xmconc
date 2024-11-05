@@ -878,14 +878,14 @@ def compile_obj(obj, root=False):
             
             code += compile_obj(obj.cond) + '\n'
             
-            for item in obj.stmt.block_items:
-                if type(item) != Default:
+            for item in (obj.stmt.block_items if type(obj.stmt) == Compound else [obj.stmt]):
+                if type(item) == Case:
                     code += 'dup ' + compile_obj(item.expr) + ' =? ~___switchl' + str(saved) + '_' + str(i) + ' then\n'
                 i += 1
             code += 'drop\n'
             i = 0
             
-            for item in obj.stmt.block_items:
+            for item in (obj.stmt.block_items if type(obj.stmt) == Compound else [obj.stmt]):
                 if type(item) == Default:
                     code += '~___switchl' + str(saved) + '_' + str(i) + ' goto\n'
                 
@@ -895,7 +895,7 @@ def compile_obj(obj, root=False):
             
             i = 0
             
-            for item in obj.stmt.block_items:
+            for item in (obj.stmt.block_items if type(obj.stmt) == Compound else [obj.stmt]):
                 code += '___switchl' + str(saved) + '_' + str(i) + ':\n'
                 for o in item.stmts:
                     current_break = '___endswitchl' + str(saved)
