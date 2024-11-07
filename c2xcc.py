@@ -881,6 +881,8 @@ def compile_obj(obj, root=False):
             for item in (obj.stmt.block_items if type(obj.stmt) == Compound else [obj.stmt]):
                 if type(item) == Case:
                     code += 'dup ' + compile_obj(item.expr) + ' =? ~___switchl' + str(saved) + '_' + str(i) + ' then\n'
+                elif type(item) != Default:
+                    code += compile_obj(item) + '\n'
                 i += 1
             code += 'drop\n'
             i = 0
@@ -897,9 +899,12 @@ def compile_obj(obj, root=False):
             
             for item in (obj.stmt.block_items if type(obj.stmt) == Compound else [obj.stmt]):
                 code += '___switchl' + str(saved) + '_' + str(i) + ':\n'
-                for o in item.stmts:
-                    current_break = '___endswitchl' + str(saved)
-                    code += '\t' + compile_obj(o, root=True) + '\n'
+                try:
+                    for o in item.stmts:
+                        current_break = '___endswitchl' + str(saved)
+                        code += '\t' + compile_obj(o, root=True) + '\n'
+                except Exception:
+                    ''
                 
                 i += 1
             
