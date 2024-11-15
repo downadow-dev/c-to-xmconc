@@ -369,7 +369,7 @@ def compile_obj(obj, root=False):
                 i = 0
                 for item in obj.type.values.enumerators:
                     if item.value != None:
-                        i = int(item.value.value)
+                        i = static_int(item.value)
                     enumerators[item.name] = i
                     i += 1
             return ''
@@ -378,7 +378,7 @@ def compile_obj(obj, root=False):
                 i = 0
                 for item in obj.type.type.values.enumerators:
                     if item.value != None:
-                        i = int(item.value.value)
+                        i = static_int(item.value)
                     enumerators[item.name] = i
                     i += 1
             return ''
@@ -626,7 +626,7 @@ def compile_obj(obj, root=False):
                     i = 0
                     for item in obj.type.type.values.enumerators:
                         if item.value != None:
-                            i = int(item.value.value)
+                            i = static_int(item.value)
                         enumerators[item.name] = i
                         i += 1
             code += create_var(obj.name)
