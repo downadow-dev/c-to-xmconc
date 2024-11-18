@@ -736,10 +736,10 @@ def compile_obj(obj, root=False):
             
             return code
         ###################
-        elif type(obj) == ID and (obj.name in structuresnoptrs or is_array(obj.name)):
+        elif type(obj) == ID and (obj.name in structuresnoptrs or is_array(obj.name)) and not root:
             return get_var(obj.name) + '  '
         # переменная
-        elif type(obj) == ID:
+        elif type(obj) == ID and not root:
             return get_var(obj.name) + ' .'
         # создание метки и переход
         elif type(obj) == Label:
