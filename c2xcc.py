@@ -262,7 +262,7 @@ def compile_obj(obj, root=False):
         if (type(obj) == Typedef) and not obj.name.startswith('__thr'):
             typedefs[obj.name] = preprocess_typedefs(obj.type)
             return ''
-        elif obj == None or (type(obj) == Decl and 'extern' in obj.storage) or ((type(obj) == Constant or type(obj) == Cast) and root):
+        elif obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
             return ''
         elif type(obj) == Compound:
             code = ''
@@ -511,7 +511,7 @@ def compile_obj(obj, root=False):
             
             return code
         # строка
-        elif type(obj) == Constant and obj.type == 'string':
+        elif type(obj) == Constant and obj.type == 'string' and not root:
             current_string += 1
             s = preprocess_string(obj.value)
             # для строк, содержащих '\n', '\b' и др.
@@ -649,28 +649,28 @@ def compile_obj(obj, root=False):
             
             return code
         # число
-        elif type(obj) == Constant and (obj.type == 'int' or obj.type.startswith('unsigned') or obj.type.startswith('long')) and not obj.value.startswith('0'):
+        elif type(obj) == Constant and (obj.type == 'int' or obj.type.startswith('unsigned') or obj.type.startswith('long')) and not obj.value.startswith('0') and not root:
             return str(int(obj.value.lower().replace('l', '').replace('u', ''), base=0))
-        elif type(obj) == Constant and (obj.type == 'int' or obj.type.startswith('unsigned') or obj.type.startswith('long')) and obj.value.startswith('0x'):
+        elif type(obj) == Constant and (obj.type == 'int' or obj.type.startswith('unsigned') or obj.type.startswith('long')) and obj.value.startswith('0x') and not root:
             return str(int(obj.value[2:].lower().replace('l', '').replace('u', ''), base=16))
-        elif type(obj) == Constant and (obj.type == 'int' or obj.type.startswith('unsigned') or obj.type.startswith('long')):
+        elif type(obj) == Constant and (obj.type == 'int' or obj.type.startswith('unsigned') or obj.type.startswith('long')) and not root:
             return str(int(obj.value.lower().replace('l', '').replace('u', ''), base=8))
         # символ
-        elif type(obj) == Constant and obj.type == 'char':
+        elif type(obj) == Constant and obj.type == 'char' and not root:
             return str(ord(preprocess_string(obj.value)))
         # элемент массива
-        elif type(obj) == ArrayRef:
+        elif type(obj) == ArrayRef and not root:
             return compile_obj(obj.name) + ' ' + compile_obj(obj.subscript) \
             + ((' ' + str(get_struct_length(structs[structures[obj.name.name]])) + ' *') if type(obj.name) == ID and \
             obj.name.name in structures else '') + ' + .'
         # sizeof
-        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and is_array(obj.expr.name):
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and is_array(obj.expr.name) and not root:
             return get_var(obj.expr.name)[:-1] + '.length}'
         elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == Typename and \
         type(obj.expr.type) == TypeDecl and type(obj.expr.type.type) == Struct and \
-        obj.expr.type.type.name in structs:
+        obj.expr.type.type.name in structs and not root:
             return str(get_struct_length(structs[obj.expr.type.type.name]))
-        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == StructRef:
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == StructRef and not root:
             for decl in structs[structures[obj.expr.name.name]]:
                 if decl.name == obj.expr.field.name:
                     if type(decl.type) == ArrayDecl:
@@ -678,11 +678,11 @@ def compile_obj(obj, root=False):
                     else:
                         return '1'
             return '0'
-        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and obj.expr.name in structuresnoptrs:
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ID and obj.expr.name in structuresnoptrs and not root:
             return str(get_struct_length(structs[structures[obj.expr.name]]))
-        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == UnaryOp and obj.expr.op == '*' and type(obj.expr.expr) == ID and obj.expr.expr.name in structures and not obj.expr.expr.name in structuresnoptrs:
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == UnaryOp and obj.expr.op == '*' and type(obj.expr.expr) == ID and obj.expr.expr.name in structures and not obj.expr.expr.name in structuresnoptrs and not root:
             return str(get_struct_length(structs[structures[obj.expr.expr.name]]))
-        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ArrayRef and type(obj.expr.name) == ID and obj.expr.name.name in structures and not obj.expr.name.name in structuresnoptrs:
+        elif type(obj) == UnaryOp and obj.op == 'sizeof' and type(obj.expr) == ArrayRef and type(obj.expr.name) == ID and obj.expr.name.name in structures and not obj.expr.name.name in structuresnoptrs and not root:
             return str(get_struct_length(structs[structures[obj.expr.name.name]]))
         elif type(obj) == UnaryOp and obj.op == 'sizeof':
             return '1'
@@ -696,9 +696,9 @@ def compile_obj(obj, root=False):
         elif type(obj) == UnaryOp and obj.op == '~':
             return compile_obj(obj.expr) + ' neg --'
         # поле объединения/структуры
-        elif type(obj) == StructRef and type(obj.name) == ID and obj.name.name in unionlist:
+        elif type(obj) == StructRef and type(obj.name) == ID and obj.name.name in unionlist and not root:
             return '{' + obj.name.name + '} ' + ('.' if obj.type == '.' else ' ')
-        elif type(obj) == StructRef:
+        elif type(obj) == StructRef and not root:
             i = 0
             j = 0
             struct = get_struct(obj.name)
