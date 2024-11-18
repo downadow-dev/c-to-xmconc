@@ -7,6 +7,7 @@
 # define assert(expr)
 #else
 # include <stdlib.h>
+# include <stdio.h>
 # define assert(expr) \
     do { if(!(expr)) { printf("%s:%d: %s: assert(%s) failed\n", __FILE__, __LINE__, __func__, #expr); abort(); } } while(0)
 #endif

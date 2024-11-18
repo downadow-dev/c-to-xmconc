@@ -29,7 +29,7 @@ int putchar(int c) {
     return c;
 }
 
-/* print a number */
+/* put number to string */
 
 char *_sprinti(long long v, char *start, int base, int upper) {
     if(v < 0) {
@@ -135,7 +135,6 @@ int sprintf(char *s, char *fmt, ...) {
     return n;
 }
 
-#ifndef _DEFAULT_PRINTF
 int printf(char *fmt, ...) {
     int n;
     va_list ap;
@@ -146,7 +145,6 @@ int printf(char *fmt, ...) {
     
     return n;
 }
-#endif
 
 #define puts(s)  printf("%s\n", (s))
 
