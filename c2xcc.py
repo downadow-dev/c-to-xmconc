@@ -267,7 +267,7 @@ def compile_obj(obj, root=False):
         elif type(obj) == Compound:
             code = ''
             for item in obj.block_items:
-                code += compile_obj(item) + '\n'
+                code += compile_obj(item, root=True) + '\n'
             return code
         elif type(obj) == NamedInitializer:
             return compile_obj(obj.expr)
