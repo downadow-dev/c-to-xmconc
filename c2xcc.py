@@ -807,6 +807,8 @@ def compile_obj(obj, root=False):
             code = ''
             saved = current_while
             current_while += 1
+            old_continue = current_continue
+            old_break = current_break
             current_continue = '___while' + str(saved)
             current_break = '___endwhile' + str(saved)
             code += '___while' + str(saved) + ': ' + compile_cond(obj.cond)
@@ -821,6 +823,9 @@ def compile_obj(obj, root=False):
             else:
                 code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
             
+            current_continue = old_continue
+            current_break = old_break
+            
             code += '~___while' + str(saved) + ' goto ___endwhile' + str(saved) + ':'
             
             return code
@@ -829,19 +834,22 @@ def compile_obj(obj, root=False):
             code = ''
             saved = current_while
             current_while += 1
+            old_continue = current_continue
+            old_break = current_break
             current_continue = '___dowhile' + str(saved)
             current_break = '___enddowhile' + str(saved)
             code += '___dowhile' + str(saved) + ':\n'
             
             if type(obj.stmt) == Compound:
                 for item in obj.stmt.block_items:
-                    current_continue = '___dowhile' + str(saved)
-                    current_break = '___enddowhile' + str(saved)
                     code += '\t' + compile_obj(item, root=True) + '\n'
             else:
                 code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
             
             code += compile_cond(obj.cond) + ' ~___dowhile' + str(saved) + ' then ___enddowhile' + str(saved) + ':\n'
+            
+            current_continue = old_continue
+            current_break = old_break
             
             return code
         # for
@@ -849,6 +857,8 @@ def compile_obj(obj, root=False):
             code = ''
             saved = current_for
             current_for += 1
+            old_continue = current_continue
+            old_break = current_break
             current_continue = '___preendfor' + str(saved)
             current_break = '___endfor' + str(saved)
             code += compile_obj(obj.init, root=True) + ' '
@@ -865,6 +875,9 @@ def compile_obj(obj, root=False):
                 code += '\t' + compile_obj(obj.stmt, root=True) + '\n'
             
             code += '___preendfor' + str(saved) + ': ' + compile_obj(obj.next, root=True) + ' ~___for' + str(saved) + ' goto ___endfor' + str(saved) + ':'
+            
+            current_continue = old_continue
+            current_break = old_break
             
             return code
         # switch
@@ -897,16 +910,20 @@ def compile_obj(obj, root=False):
             
             i = 0
             
+            old_break = current_break
+            current_break = '___endswitchl' + str(saved)
+            
             for item in (obj.stmt.block_items if type(obj.stmt) == Compound else [obj.stmt]):
                 code += '___switchl' + str(saved) + '_' + str(i) + ':\n'
                 try:
                     for o in item.stmts:
-                        current_break = '___endswitchl' + str(saved)
                         code += '\t' + compile_obj(o, root=True) + '\n'
                 except Exception:
                     ''
                 
                 i += 1
+            
+            current_break = old_break;
             
             code += '___endswitchl' + str(saved) + ':\n'
             
