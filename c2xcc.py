@@ -259,7 +259,7 @@ def compile_obj(obj, root=False):
     try:
         obj = preprocess_typedefs(obj)
         
-        if (type(obj) == Typedef) and not obj.name.startswith('__thr'):
+        if type(obj) == Typedef:
             typedefs[obj.name] = preprocess_typedefs(obj.type)
             return ''
         elif obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
@@ -335,19 +335,12 @@ def compile_obj(obj, root=False):
                         i += 1
                 except Exception:
                     ''
-                
-                if type(obj.decl.type.type) != PtrDecl and type(obj.decl.type.type.type) == IdentifierType and obj.decl.type.type.type.names[0].startswith('__thr'):
-                    code += '~' + obj.decl.name + '.___start create_thrd1 0 {return} ' + obj.decl.name + '.___start: thrd_1\n'
-                
             
             if obj.body.block_items != None:
                 for item in obj.body.block_items:
                     code += compile_obj(item, root=True) + '\n'
             
-            if type(obj.decl.type.type) != PtrDecl and type(obj.decl.type.type.type) == IdentifierType and obj.decl.type.type.type.names[0].startswith('__thr'):
-                code += '\nhalt thrd_0\n'
-            else:
-                code += '\n0 ' + ('{return}' if current_function != 'main' else 'exit')
+            code += '\n0 ' + ('{return}' if current_function != 'main' else 'exit')
             
             if obj.decl.name != 'main':
                 code += '\n' + obj.decl.name + '___END:\n'
