@@ -38,10 +38,10 @@ int strtol(char *s, char **end, int base) {
     
     /* checking for optional +/- */
     switch(*s) {
-        case '-':
-            negative = 1;
-        case '+':
-            s++;
+    case '-':
+        negative = 1;   /* and fall through */
+    case '+':
+        s++;
     }
     /********************/
     if(s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
@@ -82,10 +82,10 @@ int atoi(char *s) {
         s++;
     
     switch(*s) {
-        case '-':
-            negative = 1;
-        case '+':
-            s++;
+    case '-':
+        negative = 1;   /* and fall through */
+    case '+':
+        s++;
     }
     
     while(*s == '0')
