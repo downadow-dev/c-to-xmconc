@@ -134,8 +134,10 @@ def preprocess_string(s):
 # код в начале программы
 def get_init_code():
     return '''
-/alloc ___ret[64]
-/alloc __retptr
+/alloc ___ret_[2048]
+/define ___ret : {___ret_} (32 this_thread *) +
+/alloc __retptr_[32]
+/define __retptr :{__retptr_} this_thread +
 0 {__retptr} =
 /define ___function :({___ret} {__retptr}! +) = ({__retptr}! ++) {__retptr} =
 /define return :({__retptr}! --) {__retptr} = (({___ret} {__retptr}! +) .) goto
