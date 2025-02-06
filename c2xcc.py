@@ -30,9 +30,7 @@ typedefs = {}
 
 # получить переменную/массив
 def get_var(name):
-    if ('___F___' + name) in variables:
-        return '{___F___' + name + '}'
-    elif current_function == '' or not (current_function + '.' + name) in variables:
+    if current_function == '' or not (current_function + '.' + name) in variables:
         return '{' + name + '}'
     else:
         return '{' + current_function + '.' + name + '}'
@@ -451,10 +449,10 @@ def compile_obj(obj, root=False):
         elif type(obj) == ID and (obj.name in enumerators):
             return str(enumerators[obj.name])
         # вставить адрес функции
-        elif type(obj) == ID and (obj.name == 'main' or obj.name in functions) and not ('___F___' + obj.name) in variables:
+        elif type(obj) == ID and (obj.name == 'main' or obj.name in functions):
             code = ''
             return code + '\n~' + obj.name
-        elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and (obj.expr.name == 'main' or obj.expr.name in functions) and not ('___F___' + obj.expr.name) in variables:
+        elif type(obj) == UnaryOp and obj.op == '&' and type(obj.expr) == ID and (obj.expr.name == 'main' or obj.expr.name in functions):
             code = ''
             return code + '\n~' + obj.expr.name
         # присваивание (копирование структуры)
@@ -513,13 +511,13 @@ def compile_obj(obj, root=False):
             for c in s:
                 if ord(c) < 32 or ord(c) >= 127:
                     code = '\n'
-                    code += '/alloc ___s' + str(current_string) + '[' + str(len(s)+1) + ']\n'
+                    code += '/alloc ___s' + str(current_string) + '[' + str((len(s)+1) * 32) + ']\n'
                     i = 0
                     for ch in s:
-                        code += str(ord(ch)) + ' ({___s' + str(current_string) + '} ' + str(i) + ' +) =\n'
+                        code += str(ord(ch)) + ' ({___s' + str(current_string) + '} this_thread 32 * + ' + str(i) + ' +) =\n'
                         i += 1
-                    code += '0 ({___s' + str(current_string) + '} ' + str(i) + ' +) =\n'
-                    code += '{___s' + str(current_string) + '}'
+                    code += '0 ({___s' + str(current_string) + '} this_thread 32 * + ' + str(i) + ' +) =\n'
+                    code += '{___s' + str(current_string) + '} this_thread 32 * +'
                     return code
             return '\n"' + s.replace('"', '`') + '" ___s' + str(current_string) + '\n&___s' + str(current_string)
         # return
@@ -884,12 +882,12 @@ def compile_obj(obj, root=False):
             
             i = 0
             
-            code += create_var('___switchv' + str(saved))
-            code += compile_obj(obj.cond) + ' ' + get_var('___switchv' + str(saved)) + ' =\n'
+            code += '/alloc ___switchv' + str(saved) + '[32]\n'
+            code += compile_obj(obj.cond) + ' {___switchv' + str(saved) + '} this_thread + =\n'
             
             for item in (obj.stmt.block_items if type(obj.stmt) == Compound else [obj.stmt]):
                 if type(item) == Case:
-                    code += get_var('___switchv' + str(saved)) + ' . ' + compile_obj(item.expr) + ' =? ~___switchl' + str(saved) + '_' + str(i) + ' then\n'
+                    code += '{___switchv' + str(saved) + '} this_thread + . ' + compile_obj(item.expr) + ' =? ~___switchl' + str(saved) + '_' + str(i) + ' then\n'
                 elif type(item) != Default:
                     code += compile_obj(item) + '\n'
                 i += 1

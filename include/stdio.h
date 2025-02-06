@@ -8,7 +8,13 @@
 #define EOF          (-1)
 
 int getchar(void) {
-    char c = _call("getc");
+    char c;
+    for(;;) {
+        c = _call("getc");
+        if(c != 0 && c != 65535)
+            break;
+    }
+    
     return (c != 4 /* Ctrl+D */ && c != 3 /* Ctrl+C */) ? c : EOF;
 }
 
