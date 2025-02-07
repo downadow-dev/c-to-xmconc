@@ -592,9 +592,9 @@ def compile_obj(obj, root=False):
             if type(obj.type) == TypeDecl and type(obj.type.type) == Enum:
                 compile_obj(Decl(None, None, None, None, None, obj.type.type, None, None))
             variables += [current_function + '.' + obj.name]
-            code += '/alloc ' + current_function + '.' + obj.name + '___ARRAY__[64]\n'
+            code += '/alloc ' + current_function + '.' + obj.name + '___ARRAY__[2048]\n'
             code += '/define ' + current_function + '.' + obj.name + ' :{' \
-                + current_function + '.' + obj.name + '___ARRAY__} {__retptr}! +' + '\n'
+                + current_function + '.' + obj.name + '___ARRAY__} this_thread 32 * + {__retptr}! +' + '\n'
             if obj.init != None:
                 code += compile_obj(Assignment('=', ID(current_function + '.' + obj.name), obj.init), root=True) + '\n'
             
