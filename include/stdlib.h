@@ -10,13 +10,6 @@
 #include <ctype.h>
 #include <stddef.h>
 
-/* abs */
-#define labs    abs
-#define llabs   abs
-int abs(int v) {
-    return v > 0 ? v : -v;
-}
-
 /* strtol */
 
 int _strtol_digit(int c) {

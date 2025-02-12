@@ -256,10 +256,13 @@ def compile_obj(obj, root=False):
             return ''
         elif obj == None or (type(obj) == Decl and 'extern' in obj.storage) or (type(obj) == Constant and root):
             return ''
+        elif type(obj) == DoWhile and type(obj.cond) == Constant and obj.cond.type == 'int' and obj.cond.value == '0':
+            return compile_obj(obj.stmt)
         elif type(obj) == Compound:
             code = ''
-            for item in obj.block_items:
-                code += compile_obj(item, root=True) + '\n'
+            if obj.block_items != None:
+                for item in obj.block_items:
+                    code += compile_obj(item, root=True) + '\n'
             return code
         elif type(obj) == NamedInitializer:
             return compile_obj(obj.expr)

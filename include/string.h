@@ -3,19 +3,12 @@
 
 #include <stddef.h>
 
-char *strchrnul(char *s, int c) {
-    char *p = s;
-    
-    while(*p && *p != c) p++;
-    
-    return p;
-}
-
 char *strchr(char *s, int c) {
     if(c == '\0')
         return s+strlen(s);
     else {
-        char *p = strchrnul(s, c);
+        char *p = s;
+        while(*p && *p != c) p++;
         return *p ? p : NULL;
     }
 }
