@@ -88,6 +88,8 @@ char *strstr(char *s, char *ss) {
     return NULL;
 }
 
+/* no strtok */
+
 char *strsep(char **sp, char *d) {
     char *saved = *sp;
     if(saved == NULL)

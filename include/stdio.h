@@ -50,7 +50,6 @@ char *_sprinti(long long v, char *start, int base, int upper) {
 
 /* vsprintf */
 int vsprintf(char *s, char *fmt, va_list ap) {
-    int n = 0;
     char *p;
     char *orig = s;
     
@@ -62,47 +61,45 @@ int vsprintf(char *s, char *fmt, va_list ap) {
                 fmt++;
             
             switch(*fmt) {
-                case '%':
-                    *s++ = '%';
-                    break;
-                case 'i':
-                case 'd':
-                case 'u':
-                    s = _sprinti(va_arg(ap, int), s, 10, 0);
-                    break;
-                case 'p':
-                    p = va_arg(ap, void *);
-                    if(p) {
-                        *s++ = '0';
-                        *s++ = 'x';
-                        s = _sprinti(p, s, 16, 0);
-                    } else {
-                        s = stpcpy(s, "(nil)");
-                    }
-                    break;
-                case 'x':
-                    s = _sprinti(va_arg(ap, int), s, 16, 0);
-                    break;
-                case 'X':
-                    s = _sprinti(va_arg(ap, int), s, 16, 1);
-                    break;
-                case 'o':
-                    s = _sprinti(va_arg(ap, int), s, 8, 0);
-                    break;
-                case 'c':
-                    *s = (char)va_arg(ap, int);
-                    if(*s) s++;
-                    break;
-                case 's':
-                    p = va_arg(ap, char *);
-                    s = stpcpy(s, p ? p : "(null)");
-                    break;
-                default:
-                    return -1;
+            case '%':
+                *s++ = '%';
+                break;
+            case 'i': case 'd': case 'u':
+                s = _sprinti(va_arg(ap, int), s, 10, 0);
+                break;
+            case 'p':
+                p = va_arg(ap, void *);
+                if(p) {
+                    *s++ = '0';
+                    *s++ = 'x';
+                    s = _sprinti(p, s, 16, 0);
+                } else {
+                    s = stpcpy(s, "(nil)");
+                }
+                break;
+            case 'x':
+                s = _sprinti(va_arg(ap, int), s, 16, 0);
+                break;
+            case 'X':
+                s = _sprinti(va_arg(ap, int), s, 16, 1);
+                break;
+            case 'o':
+                s = _sprinti(va_arg(ap, int), s, 8, 0);
+                break;
+            case 'c':
+                *s = (char)va_arg(ap, int);
+                if(*s) s++;
+                break;
+            case 's':
+                p = va_arg(ap, char *);
+                s = stpcpy(s, p ? p : "(null)");
+                break;
+            default:
+                return -1;
             }
         } else *s++ = *fmt;
         
-        fmt++, n++;
+        fmt++;
         
         if(s - orig > 2000)
             break;
@@ -110,7 +107,7 @@ int vsprintf(char *s, char *fmt, va_list ap) {
     
     *s = '\0';
     
-    return n;
+    return s - orig;
 }
 
 
