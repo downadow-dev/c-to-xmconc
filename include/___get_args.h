@@ -9,7 +9,7 @@ int ___get_args(char ***argv_ptr) {
     
     static char *argv[32];
     int argc = (args[0] == '\0' ? 1 : 2);
-    argv[0] = "<prog>";
+    argv[0] = "";
     argv[1] = &args[0];
     
     int args_length = strlen(args);

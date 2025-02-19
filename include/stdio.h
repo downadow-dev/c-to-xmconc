@@ -52,10 +52,24 @@ char *_sprinti(long long v, char *start, int base, int upper) {
 int vsprintf(char *s, char *fmt, va_list ap) {
     char *p;
     char *orig = s;
+    int zfill, alt;
     
     while(*fmt) {
+        zfill = 0;
+        alt = 0;
+        
         if(*fmt == '%') {
             fmt++;
+            
+            if(*fmt == '#') {
+                alt = 1;
+                fmt++;
+            }
+            
+            if(*fmt == '0') {
+                zfill = atoi(++fmt);
+                while(isdigit(*fmt)) fmt++;
+            }
             
             while(*fmt == 'l' || *fmt == 'h' || *fmt == 't' || *fmt == 'z' || *fmt == 'j' || *fmt == ' ')
                 fmt++;
@@ -65,7 +79,16 @@ int vsprintf(char *s, char *fmt, va_list ap) {
                 *s++ = '%';
                 break;
             case 'i': case 'd': case 'u':
-                s = _sprinti(va_arg(ap, int), s, 10, 0);
+                if(zfill) {
+                    *_sprinti(va_arg(ap, int), s, 10, 0) = '\0';
+                    if((zfill -= strlen(s)) > 0) {
+                        memmove(s + zfill, s, strlen(s) + 1);
+                        memset(s, '0', zfill);
+                    }
+                    s += strlen(s);
+                } else {
+                    s = _sprinti(va_arg(ap, int), s, 10, 0);
+                }
                 break;
             case 'p':
                 p = va_arg(ap, void *);
@@ -78,13 +101,52 @@ int vsprintf(char *s, char *fmt, va_list ap) {
                 }
                 break;
             case 'x':
-                s = _sprinti(va_arg(ap, int), s, 16, 0);
+                if(alt) {
+                    *s++ = '0';
+                    *s++ = 'x';
+                }
+                
+                if(zfill) {
+                    *_sprinti(va_arg(ap, int), s, 16, 0) = '\0';
+                    if((zfill -= strlen(s)) > 0) {
+                        memmove(s + zfill, s, strlen(s) + 1);
+                        memset(s, '0', zfill);
+                    }
+                    s += strlen(s);
+                } else {
+                    s = _sprinti(va_arg(ap, int), s, 16, 0);
+                }
                 break;
             case 'X':
-                s = _sprinti(va_arg(ap, int), s, 16, 1);
+                if(alt) {
+                    *s++ = '0';
+                    *s++ = 'X';
+                }
+                
+                if(zfill) {
+                    *_sprinti(va_arg(ap, int), s, 16, 1) = '\0';
+                    if((zfill -= strlen(s)) > 0) {
+                        memmove(s + zfill, s, strlen(s) + 1);
+                        memset(s, '0', zfill);
+                    }
+                    s += strlen(s);
+                } else {
+                    s = _sprinti(va_arg(ap, int), s, 16, 1);
+                }
                 break;
             case 'o':
-                s = _sprinti(va_arg(ap, int), s, 8, 0);
+                if(alt) *s++ = '0';
+                
+                if(zfill) {
+                    *_sprinti(va_arg(ap, int), s, 8, 0) = '\0';
+                    if((zfill -= strlen(s)) > 0) {
+                        memmove(s + zfill, s, strlen(s) + 1);
+                        memset(s, '0', zfill);
+                    }
+                    s += strlen(s);
+                } else {
+                    s = _sprinti(va_arg(ap, int), s, 8, 0);
+                }
                 break;
             case 'c':
                 *s = (char)va_arg(ap, int);
