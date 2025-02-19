@@ -481,7 +481,7 @@ def compile_obj(obj, root=False):
             s = preprocess_string(obj.value)
             # для строк, содержащих '\n', '\b' и др.
             for c in s:
-                if ord(c) < 32 or ord(c) >= 127:
+                if ord(c) < 32 or ord(c) >= 127 or c == '<' or c == '>' or c == '%':
                     code = '\n'
                     code += '/alloc ___s' + str(current_string) + '[' + str((len(s)+1) * 32) + ']\n'
                     i = 0
